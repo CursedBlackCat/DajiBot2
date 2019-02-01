@@ -3,14 +3,43 @@ package me.cursedblackcat.dajibot2.diamondseal;
 import java.util.ArrayList;
 import java.util.Random;
 
+/**
+ * Represents a diamond seal machine/banner.
+ * @author Darren Yip
+ *
+ */
 public class DiamondSeal {
 	private ArrayList<DiamondSealEntity> entities;
 	private int[] rates; //Represents the percent draw rates of the entities of the corresponding index, multiplied by 10. For example, if rates[0] is 10, entities.get(0) has a pull chance of 1 percent. Should add up to 1000.
 	private int[] rateRanges; //Used in random number selection. Each index is the sum of itself and all the previous indices. For example, if rates is {10, 45, 45, 145} then rateRanges is {10, 55, 100, 245}
 	
 	public DiamondSeal(ArrayList<DiamondSealEntity> ent, int[] r) {
+		
+		/*Check if rates add up to 100%*/
+		int sum = 0;
+		for(int i : r) {
+		    sum += i;
+		}
+		
+		if (sum != 1000) {
+			throw new IllegalArgumentException("Diamond seal rate does not add up to 100%. Adds up to " + (sum / 10) + "%");
+		}
+		
+		/*Assign the variables*/
 		entities = ent;
 		rates = r;
+		
+		/*Calculate the rate ranges to be used for gacha pulls*/
+		rateRanges = new int[rates.length];
+		rateRanges[0] = 0;
+		
+		for (int i = 1; i < rates.length; i++) {
+			rateRanges[i] = rateRanges[i - 1] + rates[i];
+		}
+		
+		if (rateRanges[rateRanges.length - 1] != 1000) {
+			throw new IllegalArgumentException("Upper bound of rate range is not 1000 (100.0%). Check code logic");
+		}
 	}
 	
 	public Card drawFromMachine() {

@@ -1,24 +1,11 @@
 package me.cursedblackcat.dajibot2;
 
 /**
- * Represents a bot command, with a command and potential arguments.
+ * Represents a bot command that this bot recognizes.
  * @author Darren Yip
- *
  */
 public class Command {
-	private String command;
-	private String[] arguments;
-	
-	public Command(String c, String[] a) {
-		command = c;
-		arguments = a;
-	}
-	
-	public String getCommand() {
-		return command;
-	}
-	
-	public String[] getArguments() {
-		return arguments;
-	}
+	private String commandName;
+	private String helpText;
+
 }
