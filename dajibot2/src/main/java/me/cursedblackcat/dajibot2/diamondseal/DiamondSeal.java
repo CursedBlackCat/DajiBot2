@@ -1,6 +1,7 @@
 package me.cursedblackcat.dajibot2.diamondseal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -9,11 +10,13 @@ import java.util.Random;
  *
  */
 public class DiamondSeal {
+	private String name;
+	private String commandName;
 	private ArrayList<DiamondSealEntity> entities;
 	private int[] rates; //Represents the percent draw rates of the entities of the corresponding index, multiplied by 10. For example, if rates[0] is 10, entities.get(0) has a pull chance of 1 percent. Should add up to 1000.
 	private int[] rateRanges; //Used in random number selection. Each index is the sum of itself and all the previous indices. For example, if rates is {10, 45, 45, 145} then rateRanges is {10, 55, 100, 245}
 	
-	public DiamondSeal(ArrayList<DiamondSealEntity> ent, int[] r) {
+	public DiamondSeal(String n, String c, ArrayList<DiamondSealEntity> ent, int[] r) {
 		
 		/*Check if rates add up to 100%*/
 		int sum = 0;
@@ -26,20 +29,26 @@ public class DiamondSeal {
 		}
 		
 		/*Assign the variables*/
+		name = n;
+		commandName = c;
 		entities = ent;
 		rates = r;
 		
 		/*Calculate the rate ranges to be used for gacha pulls*/
 		rateRanges = new int[rates.length];
-		rateRanges[0] = 0;
+		rateRanges[0] = rates[0];
 		
 		for (int i = 1; i < rates.length; i++) {
 			rateRanges[i] = rateRanges[i - 1] + rates[i];
 		}
 		
 		if (rateRanges[rateRanges.length - 1] != 1000) {
-			throw new IllegalArgumentException("Upper bound of rate range is not 1000 (100.0%). Check code logic");
+			throw new IllegalArgumentException("Upper bound of rate range is not 1000 (100.0%). rateRanges was " + Arrays.toString(rateRanges));
 		}
+	}
+	
+	public String getCommandName() {
+		return commandName;
 	}
 	
 	public Card drawFromMachine() {
@@ -58,5 +67,9 @@ public class DiamondSeal {
 		}
 		
 		return new Card("An error has occurred.");
+	}
+
+	public String getName() {
+		return name;
 	}
 }

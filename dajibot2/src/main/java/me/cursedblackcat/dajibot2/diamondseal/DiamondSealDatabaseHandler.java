@@ -11,7 +11,7 @@ import java.util.Arrays;
  * @author Darren
  *
  */
-public class DiamondSealHandler {
+public class DiamondSealDatabaseHandler {
 	Connection conn = null;
 	Statement stmt = null;
 
@@ -20,14 +20,14 @@ public class DiamondSealHandler {
 	 * @throws ClassNotFoundException
 	 * @throws SQLException
 	 */
-	public DiamondSealHandler() throws ClassNotFoundException, SQLException {
+	public DiamondSealDatabaseHandler() throws ClassNotFoundException, SQLException {
 		Class.forName("org.sqlite.JDBC");
 		conn = DriverManager.getConnection("jdbc:sqlite:diamondseal.db");
 		stmt = conn.createStatement();
 		String sql = "CREATE TABLE IF NOT EXISTS DiamondSeals " +
 				"(ID INTEGER PRIMARY KEY AUTOINCREMENT     NOT NULL," +
 				" Name            TEXT    NOT NULL, " + //Name to be displayed. Example: "Fairy's Light"
-				" Command         TEXT    NOT NULL, " + //Name to be used in the command. Example: "fairytail"
+				" CommandName     TEXT    NOT NULL, " + //Name to be used in the command. Example: "fairytail"
 				" Entities        TEXT    NOT NULL, " + //Cards or series in the seal, in Arrays.toString format. Example: "["Salamander of Fire - Natsu", "Celestial Wizard - Lucy", "Fairy Queen Titania - Erza"]"
 				" EntityType      TEXT    NOT NULL, " + //Whether the entities are "Card" or "Series".
 				" Rates           TEXT    NOT NULL)"; //Card pull rates in Arrays.toString format, each number being the percent chance multiplied by 10. Should add up to 1000. Example: "[10, 45, 45, 180, 180, 180, 180, 180]" 
@@ -45,7 +45,7 @@ public class DiamondSealHandler {
 		}
 		
 		try {
-			String sql = "INSERT INTO DiamondSeals (Name, Command, Entities, EntityType, Rates) " +
+			String sql = "INSERT INTO DiamondSeals (Name, CommandName, Entities, EntityType, Rates) " +
 					"VALUES ('" + name + "', '" + commandName + "', '" + Arrays.toString(entities) + "', '" + entityType + "', '" + Arrays.toString(rates) + "');";
 			stmt.executeUpdate(sql);
 			stmt.close();
