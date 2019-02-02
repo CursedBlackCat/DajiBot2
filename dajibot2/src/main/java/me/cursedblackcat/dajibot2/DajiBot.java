@@ -3,6 +3,7 @@ package me.cursedblackcat.dajibot2;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -19,6 +20,7 @@ import org.javacord.api.util.event.ListenerManager;
 import me.cursedblackcat.dajibot2.diamondseal.Card;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSeal;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSealBuilder;
+import me.cursedblackcat.dajibot2.diamondseal.DiamondSealDatabaseHandler;
 
 /**
  * The main class of the program.
@@ -54,6 +56,8 @@ public class DajiBot {
 	
 	private static ArrayList<DiamondSeal> diamondSeals = new ArrayList<DiamondSeal>();
 
+	private static DiamondSealDatabaseHandler sealDBHandler;
+
 	public static ExecutedCommand parseCommand(String message) {
 		String[] parts = message.split("\\s+");
 		String command = parts[0].substring(1);
@@ -72,19 +76,9 @@ public class DajiBot {
 	public static void handleCommand(ExecutedCommand c, Messageable channel, boolean privileged, User user) {
 		String command = c.getCommand().toLowerCase();
 
-		switch (command) { //TODO implement command actions
+		switch (command) {
 		case "help":
-			if (c.getArguments().length == 0) {
-				channel.sendMessage(user.getMentionTag() + "\n" + helpText);
-			} else {
-				switch (c.getArguments()[0]) {
-				case "diamondseal":
-					//TODO
-					break;
-				default:
-					channel.sendMessage(user.getMentionTag() + " there is no such command `" + c.getArguments()[0] + "`");
-				}
-			}
+			channel.sendMessage(user.getMentionTag() + "\n" + helpText);
 			break;
 		case "diamondseal":
 			DiamondSeal seal = getDiamondSealByCommandName(c.getArguments()[0]);
@@ -96,14 +90,18 @@ public class DajiBot {
 			}
 			break;
 		case "listseals":
-			String response = "";
-			for (DiamondSeal s : diamondSeals) {
-				response += s.getCommandName();
-				response += ", ";
-			}
-			response = response.substring(0, response.length() - 2);
-			channel.sendMessage(user.getMentionTag() + ", here are all the diamond seal banners available:\n\n" + response);
+			try {
+				String response = "";
+				for (DiamondSeal s : diamondSeals) {
+					response += s.getCommandName();
+					response += ", ";
+				}
+				response = response.substring(0, response.length() - 2);
+				channel.sendMessage(user.getMentionTag() + ", here are all the diamond seal banners available:\n\n" + response);
 
+			} catch (StringIndexOutOfBoundsException e) {
+				channel.sendMessage(user.getMentionTag() + " There are no diamond seal banners available.");
+			}
 			break;
 		case "changeprefix":
 			if (privileged) {
@@ -115,7 +113,6 @@ public class DajiBot {
 			break;
 		case "createseal":
 			if (privileged) {
-				//TODO put the seal in database for persistence
 				DiamondSealBuilder builder = new DiamondSealBuilder();
 				//Get seal name
 				channel.sendMessage(user.getMentionTag() + " What should the seal be called?");
@@ -147,6 +144,7 @@ public class DajiBot {
 												try {
 													DiamondSeal newSeal = builder.build();
 													diamondSeals.add(newSeal);
+													sealDBHandler.addSeal(newSeal.getName(), newSeal.getCommandName(), newSeal.getEntityNames(), "Card", newSeal.getRates());
 													channel.sendMessage(user.getMentionTag() + " Seal created! Pull from your new seal by running `diamondseal " + event1.getMessageContent() + "`");
 												} catch (IllegalStateException e) {
 													channel.sendMessage(user.getMentionTag() + " Invalid entry. Amount of cards and amount of rates should be equal, and all rates should sum up to 1000, or 100%.");
@@ -203,10 +201,13 @@ public class DajiBot {
 		return false;
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
 		BufferedReader bufferedReader = new BufferedReader(new FileReader("token.txt"));
 		String token = bufferedReader.readLine();
 		bufferedReader.close();
+		
+		sealDBHandler = new DiamondSealDatabaseHandler();
+		diamondSeals = sealDBHandler.getAllDiamondSeals();
 
 		api = new DiscordApiBuilder().setToken(token).login().join();
 

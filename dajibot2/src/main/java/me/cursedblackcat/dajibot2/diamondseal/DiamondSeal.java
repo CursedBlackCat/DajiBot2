@@ -68,6 +68,22 @@ public class DiamondSeal {
 		
 		return new Card("An error has occurred.");
 	}
+	
+	public ArrayList<DiamondSealEntity> getEntities(){
+		return entities;
+	}
+	
+	public String[] getEntityNames() {
+		String[] names = new String[entities.size()];
+		for (int i = 0; i < entities.size(); i++) {
+			names[i] = entities.get(i).getName();
+		}
+		return names;
+	}
+	
+	public int[] getRates() {
+		return rates;
+	}
 
 	public String getName() {
 		return name;

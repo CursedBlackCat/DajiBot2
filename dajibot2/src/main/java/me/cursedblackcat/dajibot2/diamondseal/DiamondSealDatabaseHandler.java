@@ -2,12 +2,14 @@ package me.cursedblackcat.dajibot2.diamondseal;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- * Class for handling database operations.
+ * Class for handling database operations in the Diamond Seal table.
  * @author Darren
  *
  */
@@ -43,7 +45,7 @@ public class DiamondSealDatabaseHandler {
 		if (!(entityType.equalsIgnoreCase("Card") || entityType.equalsIgnoreCase("Series"))) {
 			throw new IllegalArgumentException("entityType must be either \"Card\" or \"Series\".");
 		}
-		
+
 		try {
 			String sql = "INSERT INTO DiamondSeals (Name, CommandName, Entities, EntityType, Rates) " +
 					"VALUES ('" + name + "', '" + commandName + "', '" + Arrays.toString(entities) + "', '" + entityType + "', '" + Arrays.toString(rates) + "');";
@@ -54,5 +56,59 @@ public class DiamondSealDatabaseHandler {
 			e.printStackTrace();
 			return false;
 		}
+	}
+
+	public ArrayList<DiamondSeal> getAllDiamondSeals() throws SQLException{
+		ArrayList<DiamondSeal> seals = new ArrayList<DiamondSeal>();
+		stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("SELECT * FROM DiamondSeals;");
+
+		while (rs.next()) {			
+			DiamondSealBuilder builder = new DiamondSealBuilder();
+			builder.withName(rs.getString("Name"));
+			builder.withCommandName(rs.getString("CommandName"));
+
+			switch(rs.getString("EntityType")) {
+			case "Card":
+				String[] cardNames = toStringArray(rs.getString("Entities"));
+				for (String name : cardNames) {
+					builder.withCard(new Card(name));
+				}
+				break;
+			case "Series":
+				//TODO series implementation
+				break;
+			default:
+				throw new IllegalArgumentException("EntityType in database must be either Card or Series");
+			}
+
+			int[] cardRates = toIntArray(rs.getString("Rates"));
+			for (int rate : cardRates) {
+				builder.withRate(rate);
+			}
+
+			DiamondSeal seal = builder.build();
+			seals.add(seal);
+		}
+
+		return seals;
+	}
+
+	private static String[] toStringArray(String string) {
+		String[] strings = string.replace("[", "").replace("]", "").split("\\s*,\\s*");
+		String result[] = new String[strings.length];
+		for (int i = 0; i < result.length; i++) {
+			result[i] = strings[i];
+		}
+		return result;
+	}
+
+	private static int[] toIntArray(String string) {
+		String[] strings = string.replace("[", "").replace("]", "").split(", ");
+		int result[] = new int[strings.length];
+		for (int i = 0; i < result.length; i++) {
+			result[i] = Integer.parseInt(strings[i]);
+		}
+		return result;
 	}
 }
