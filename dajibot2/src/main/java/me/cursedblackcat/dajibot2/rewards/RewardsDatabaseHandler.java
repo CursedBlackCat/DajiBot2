@@ -65,7 +65,7 @@ public class RewardsDatabaseHandler {
 	 */
 	public boolean removeReward(Reward reward) {
 		try {
-			String sql = "DELETE FROM DiamondSeals WHERE UserID=" + reward.getUser().getId() + " AND ItemType= '" + reward.getItemType() + "' AND Amount=" + reward.getAmount() + "AND ExpiryDate=" + reward.getExpiryDate().getTime() + "AND CardID=" + reward.getCardID() + ";";
+			String sql = "DELETE FROM Rewards WHERE UserID=" + reward.getUser().getId() + " AND ItemType= '" + reward.getItemType() + "' AND Amount=" + reward.getAmount() + "AND ExpiryDate=" + reward.getExpiryDate().getTime() + "AND CardID=" + reward.getCardID() + ";";
 			stmt.executeUpdate(sql);
 			stmt.close();
 			return true;
@@ -104,7 +104,7 @@ public class RewardsDatabaseHandler {
 	public boolean clearExpiredRewards() {
 		try {
 			long currentTime = new Date().getTime();
-			String sql = "DELETE FROM DiamondSeals WHERE ExpiryDate<" + currentTime + ";";
+			String sql = "DELETE FROM Rewards WHERE ExpiryDate<" + currentTime + ";";
 			stmt.executeUpdate(sql);
 			stmt.close();
 			return true;
