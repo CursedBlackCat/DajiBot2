@@ -12,6 +12,7 @@ import java.util.Date;
 import org.javacord.api.entity.user.User;
 
 import me.cursedblackcat.dajibot2.DajiBot;
+import me.cursedblackcat.dajibot2.rewards.ItemType;
 import me.cursedblackcat.dajibot2.rewards.Reward;
 
 /**
@@ -70,6 +71,29 @@ public class AccountDatabaseHandler {
 		}
 	}
 	
+	/**
+	 * Checks if a user is already registered.
+	 * @return
+	 */
+	public boolean userAlreadyExists(User user) {
+		try {
+			stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM RegisteredUsers WHERE UserID=" + user.getId() + ";");
+
+			while (rs.next()) {			
+				return true;
+			}
+
+			return false;
+		} catch (Exception e) {
+			return true;
+		}
+	}
+	
+	/**
+	 * Claim a reward.
+	 * @return True if the operation completed successfully, or false if an exception occurred.
+	 */
 	public boolean claimReward(User user, Reward reward) {
 		try {	
 			//TODO claim rewards

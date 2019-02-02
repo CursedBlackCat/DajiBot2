@@ -19,6 +19,8 @@ import org.javacord.api.listener.message.MessageCreateListener;
 import org.javacord.api.util.event.ListenerManager;
 
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSealCard;
+import me.cursedblackcat.dajibot2.accounts.Account;
+import me.cursedblackcat.dajibot2.accounts.AccountDatabaseHandler;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSeal;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSealBuilder;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSealDatabaseHandler;
@@ -37,8 +39,12 @@ public class DajiBot {
 			"help - Shows this menu\n\n" +
 			"~~~Diamond seal simulator commands~~~\n" + 
 			"diamondseal <sealname> - Pull a card from the diamond seal simulator\n\n" +
-			"listseals - List all diamond seal banners in the diamond seal simulator\n" +
+			"listseals - List all diamond seal banners in the diamond seal simulator\n\n" +
 			"sealinfo <sealname> - Check available cards/series and their rates in a seal banner.\n\n" +
+			"~~~Account commands~~~\n" + 
+			"register - Register your Discord account with DajiBot.\n\n" +
+			"rewards - List all of your unclaimed rewards.\n\n" +
+			"accountinfo - View your account info.\n\n" +
 			"~~~Admin commands~~~\n" + 
 			"changeprefix - Change the bot's command prefix. Can only be run by people with admin permissions.\n\n" + 
 			"createseal - Create a new diamond seal machine. Can only be run by people with admin permissions.\n\n" + 
@@ -60,6 +66,7 @@ public class DajiBot {
 	private static ArrayList<DiamondSeal> diamondSeals = new ArrayList<DiamondSeal>();
 
 	private static DiamondSealDatabaseHandler sealDBHandler;
+	private static AccountDatabaseHandler accountDBHandler;
 
 	public static ExecutedCommand parseCommand(String message) {
 		String[] parts = message.split("\\s+");
@@ -118,6 +125,21 @@ public class DajiBot {
 			} catch (StringIndexOutOfBoundsException e) {
 				channel.sendMessage(user.getMentionTag() + " There are no diamond seal banners available.");
 			}
+			break;
+		case "register": //TODO
+			if (accountDBHandler.userAlreadyExists(user)) {
+				channel.sendMessage(user.getMentionTag() + " You have already registered. View your account info by running `accountinfo`");
+			} else {
+				if (accountDBHandler.registerNewUser(new Account(user))) {
+					channel.sendMessage(user.getMentionTag() + " Successfully registered. Welcome, summoner! View your account info by running `accountinfo`");
+				} else {
+					channel.sendMessage(user.getMentionTag() + " An error occurred while registering.");
+				}
+			}
+			break;
+		case "rewards": //TODO
+			break;
+		case "accountinfo": //TODO
 			break;
 		case "changeprefix":
 			if (privileged) {
@@ -246,6 +268,7 @@ public class DajiBot {
 		bufferedReader.close();
 
 		sealDBHandler = new DiamondSealDatabaseHandler();
+		accountDBHandler = new AccountDatabaseHandler();
 		diamondSeals = sealDBHandler.getAllDiamondSeals();
 
 		api = new DiscordApiBuilder().setToken(token).login().join();
