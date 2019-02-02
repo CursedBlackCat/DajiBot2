@@ -15,12 +15,24 @@ public class Account {
 	private ArrayList<Reward> rewardsInbox = new ArrayList<Reward>();
 	private ArrayList<Integer> inventory = new ArrayList<Integer>(); //IDs of all the cards in this account's inventory
 
+	/**
+	 * Register a new user with default currency values
+	 * @param u
+	 */
 	public Account(User u) {
 		user = u;
 		coins = 10000;
 		diamonds = 5;
 		friendPoints = 2000;
 		souls = 0;
+	}
+
+	public Account(User u, int c, int d, int fp, int s) {
+		user = u;
+		coins = c;
+		diamonds = d;
+		friendPoints = fp;
+		souls = s;
 	}
 
 	public User getUser() {

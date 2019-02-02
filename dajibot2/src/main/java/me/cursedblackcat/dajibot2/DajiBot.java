@@ -1,5 +1,6 @@
 package me.cursedblackcat.dajibot2;
 
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.message.Messageable;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
@@ -45,6 +47,7 @@ public class DajiBot {
 			"register - Register your Discord account with DajiBot.\n\n" +
 			"rewards - List all of your unclaimed rewards.\n\n" +
 			"accountinfo - View your account info.\n\n" +
+			"inventory - View your card inventory.\n\n" +
 			"~~~Admin commands~~~\n" + 
 			"changeprefix - Change the bot's command prefix. Can only be run by people with admin permissions.\n\n" + 
 			"createseal - Create a new diamond seal machine. Can only be run by people with admin permissions.\n\n" + 
@@ -126,7 +129,7 @@ public class DajiBot {
 				channel.sendMessage(user.getMentionTag() + " There are no diamond seal banners available.");
 			}
 			break;
-		case "register": //TODO
+		case "register":
 			if (accountDBHandler.userAlreadyExists(user)) {
 				channel.sendMessage(user.getMentionTag() + " You have already registered. View your account info by running `accountinfo`");
 			} else {
@@ -139,7 +142,21 @@ public class DajiBot {
 			break;
 		case "rewards": //TODO
 			break;
-		case "accountinfo": //TODO
+		case "accountinfo":
+			Account account = accountDBHandler.getUserAccount(user);
+			EmbedBuilder embedBuilder = new EmbedBuilder();
+			embedBuilder.setAuthor(user)
+			.setTitle("Account Info")
+			.setColor(Color.MAGENTA)
+			.addField("Diamonds", String.valueOf(account.getDiamonds()))
+			.addField("Coins", String.valueOf(account.getCoins()))
+			.addField("Friend Points", String.valueOf(account.getFriendPoints()))
+			.addField("Souls", String.valueOf(account.getSouls()))
+			.setFooter("DajiBot v2", "https://cdn.discordapp.com/app-icons/293148175013773312/9ec4cdaabd88f0902a7ea2eddab5a827.png");
+			channel.sendMessage(embedBuilder);
+			break;
+		case "viewinventory":
+		case "inventory": //TODO
 			break;
 		case "changeprefix":
 			if (privileged) {

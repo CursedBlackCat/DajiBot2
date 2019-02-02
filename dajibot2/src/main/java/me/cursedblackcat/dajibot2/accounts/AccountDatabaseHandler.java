@@ -71,6 +71,21 @@ public class AccountDatabaseHandler {
 		}
 	}
 	
+	public Account getUserAccount(User user) {
+		try {
+			stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM Accounts WHERE UserID=" + user.getId() + ";");
+
+			rs.next();
+			
+			
+			return new Account(user, rs.getInt("Coins"), rs.getInt("Diamonds"), rs.getInt("FriendPoints"), rs.getInt("Souls"));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	/**
 	 * Checks if a user is already registered.
 	 * @return
