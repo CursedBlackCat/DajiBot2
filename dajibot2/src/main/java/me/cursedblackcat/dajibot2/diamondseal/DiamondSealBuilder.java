@@ -23,7 +23,7 @@ public class DiamondSealBuilder {
 		commandName = c;
 	}
 	
-	public void withSeries(Series series, int rate) {
+	public void withSeries(DiamondSealSeries series, int rate) {
 		if (hasCard()) {
 			throw new IllegalStateException("Diamond seal already has cards; cannot add series.");
 		}
@@ -31,7 +31,7 @@ public class DiamondSealBuilder {
 		rates.add(rate);
 	}
 	
-	public void withCard(Card card, int rate) {
+	public void withCard(DiamondSealCard card, int rate) {
 		if (hasSeries()) {
 			throw new IllegalStateException("Diamond seal already has series; cannot add card.");
 		}
@@ -40,7 +40,7 @@ public class DiamondSealBuilder {
 	}
 	
 	/*The below two methods should be used in such a way that cards and rates of any given index match!*/
-	public void withCard(Card card) {
+	public void withCard(DiamondSealCard card) {
 		if (hasSeries()) {
 			throw new IllegalStateException("Diamond seal already has series; cannot add card.");
 		}
@@ -64,7 +64,7 @@ public class DiamondSealBuilder {
 		}
 		
 		for (DiamondSealEntity ent : entities) {
-			if (ent instanceof Series) {
+			if (ent instanceof DiamondSealSeries) {
 				return true;
 			}
 		}
@@ -78,7 +78,7 @@ public class DiamondSealBuilder {
 		}
 		
 		for (DiamondSealEntity ent : entities) {
-			if (ent instanceof Card) {
+			if (ent instanceof DiamondSealCard) {
 				return true;
 			}
 		}

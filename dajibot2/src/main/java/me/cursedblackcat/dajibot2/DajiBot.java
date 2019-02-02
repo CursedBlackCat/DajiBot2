@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.javacord.api.DiscordApi;
@@ -17,7 +18,7 @@ import org.javacord.api.entity.user.User;
 import org.javacord.api.listener.message.MessageCreateListener;
 import org.javacord.api.util.event.ListenerManager;
 
-import me.cursedblackcat.dajibot2.diamondseal.Card;
+import me.cursedblackcat.dajibot2.diamondseal.DiamondSealCard;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSeal;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSealBuilder;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSealDatabaseHandler;
@@ -33,15 +34,17 @@ public class DajiBot {
 			"**These are the commands I recognize:**\n" + 
 			"```\n" +
 			"~~~General commands~~~\n" + 
-			"help - Shows this menu\n\n" + 
-			"diamondseal - Pull a card from the diamond seal simulator\n\n" +
-			"listseals - List all diamond seal banners in the diamond seal simulator\n\n" +
+			"help - Shows this menu\n\n" +
+			"~~~Diamond seal simulator commands~~~\n" + 
+			"diamondseal <sealname> - Pull a card from the diamond seal simulator\n\n" +
+			"listseals - List all diamond seal banners in the diamond seal simulator\n" +
+			"sealinfo <sealname> - Check available cards/series and their rates in a seal banner.\n\n" +
 			"~~~Admin commands~~~\n" + 
 			"changeprefix - Change the bot's command prefix. Can only be run by people with admin permissions.\n\n" + 
 			"createseal - Create a new diamond seal machine. Can only be run by people with admin permissions.\n\n" + 
 			"deleteseal - Delete a diamond seal machine. Can only be run by people with admin permissions.\n\n" + 
 			"```";
-	
+
 	private	static String prefix = "$";
 
 	private static DiscordApi api;
@@ -53,7 +56,7 @@ public class DajiBot {
 		};
 
 	private static final long ownerID = 226767560211693568L;
-	
+
 	private static ArrayList<DiamondSeal> diamondSeals = new ArrayList<DiamondSeal>();
 
 	private static DiamondSealDatabaseHandler sealDBHandler;
@@ -81,12 +84,25 @@ public class DajiBot {
 			channel.sendMessage(user.getMentionTag() + "\n" + helpText);
 			break;
 		case "diamondseal":
-			DiamondSeal seal = getDiamondSealByCommandName(c.getArguments()[0]);
 			try {
+				DiamondSeal seal = getDiamondSealByCommandName(c.getArguments()[0]);
 				channel.sendMessage(user.getMentionTag() + " You pulled `" + seal.drawFromMachine().getName() + "` from " + seal.getName() +  "!");
-				
+
 			} catch (NullPointerException e) {
 				channel.sendMessage(user.getMentionTag() + " No such diamond seal `" + c.getArguments()[0] + "`");
+			} catch (ArrayIndexOutOfBoundsException e) {
+				channel.sendMessage(user.getMentionTag() + " Please specify a diamond seal banner. Run `" + "listseals" + "` for a list of diamond seal banners.");
+			}
+			break;
+		case "sealinfo":
+			try {
+				DiamondSeal sealBanner = getDiamondSealByCommandName(c.getArguments()[0]);
+				channel.sendMessage(user.getMentionTag() + "\n" + sealBanner.getInfo());
+
+			} catch (NullPointerException e) {
+				channel.sendMessage(user.getMentionTag() + " No such diamond seal `" + c.getArguments()[0] + "`");
+			} catch (ArrayIndexOutOfBoundsException e) {
+				channel.sendMessage(user.getMentionTag() + " Please specify a diamond seal banner. Run `" + "listseals" + "` for a list of diamond seal banners.");
 			}
 			break;
 		case "listseals":
@@ -130,7 +146,7 @@ public class DajiBot {
 									if(event2.getMessageAuthor().asUser().get() == user) {
 										String[] cardNames = event2.getMessageContent().split("\\s*,\\s*");
 										for (String name : cardNames) {
-											builder.withCard(new Card(name));
+											builder.withCard(new DiamondSealCard(name));
 										}
 										listenerManager.remove();
 										channel.sendMessage(user.getMentionTag() + " Please enter a comma-separated list of each card's percent rate in the seal, multiplied by 10, in the same order that you entered the cards above.");
@@ -143,10 +159,16 @@ public class DajiBot {
 												listenerManager.remove();
 												try {
 													DiamondSeal newSeal = builder.build();
-													diamondSeals.add(newSeal);
-													sealDBHandler.addSeal(newSeal.getName(), newSeal.getCommandName(), newSeal.getEntityNames(), "Card", newSeal.getRates());
-													channel.sendMessage(user.getMentionTag() + " Seal created! Pull from your new seal by running `diamondseal " + event1.getMessageContent() + "`");
+													boolean result = sealDBHandler.addSeal(newSeal.getName(), newSeal.getCommandName(), newSeal.getEntityNames(), "Card", newSeal.getRates());
+													if (result) {
+														diamondSeals.add(newSeal);
+														channel.sendMessage(user.getMentionTag() + " Seal created! Pull from your new seal by running `diamondseal " + event1.getMessageContent() + "`");
+													} else {
+														channel.sendMessage(user.getMentionTag() + " An error occurred when creating the seal (SQLException). The seal was not created.");
+													}
 												} catch (IllegalStateException e) {
+													channel.sendMessage(user.getMentionTag() + " Invalid entry. Amount of cards and amount of rates should be equal, and all rates should sum up to 1000, or 100%.");
+												} catch (IllegalArgumentException e) {
 													channel.sendMessage(user.getMentionTag() + " Invalid entry. Amount of cards and amount of rates should be equal, and all rates should sum up to 1000, or 100%.");
 												}
 											}
@@ -162,16 +184,21 @@ public class DajiBot {
 			}
 			break;
 		case "deleteseal":
+		case "removeseal":
 			if (privileged) {
-				diamondSeals.remove(getDiamondSealByCommandName(c.getArguments()[0]));
-				channel.sendMessage(user.getMentionTag() + " Seal machine " + c.getArguments()[0] + " has been deleted.");
+				if (sealDBHandler.removeSeal(c.getArguments()[0])) {
+					diamondSeals.remove(getDiamondSealByCommandName(c.getArguments()[0]));
+					channel.sendMessage(user.getMentionTag() + " Seal banner " + c.getArguments()[0] + " has been deleted.");
+				} else {
+					channel.sendMessage(user.getMentionTag() + " An error occurred when deleting the seal (SQLException). The seal was not deleted.");
+				}		
 			} else {
 				channel.sendMessage(user.getMentionTag() + " You do not have permissions to run this command!");
 			}
 			break;
 		}
 	}
-	
+
 	private static DiamondSeal getDiamondSealByCommandName(String name) {
 		for (DiamondSeal seal : diamondSeals) {
 			if (seal.getCommandName().equals(name)) {
@@ -200,12 +227,24 @@ public class DajiBot {
 
 		return false;
 	}
+	
+	public static User getUserById(long id){
+		try {
+			return api.getUserById(id).get();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
 		BufferedReader bufferedReader = new BufferedReader(new FileReader("token.txt"));
 		String token = bufferedReader.readLine();
 		bufferedReader.close();
-		
+
 		sealDBHandler = new DiamondSealDatabaseHandler();
 		diamondSeals = sealDBHandler.getAllDiamondSeals();
 

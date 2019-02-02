@@ -51,22 +51,22 @@ public class DiamondSeal {
 		return commandName;
 	}
 	
-	public Card drawFromMachine() {
+	public DiamondSealCard drawFromMachine() {
 		Random r = new Random();
 		int randNum = r.nextInt(1000); //random int from 0 to 999, inclusive
 		
 		for (int i = 0; i < rateRanges.length; i++) {
 			if (randNum < rateRanges[i]) {
 				DiamondSealEntity result = entities.get(i);
-				if (result instanceof Card) {
-					return (Card) result;
+				if (result instanceof DiamondSealCard) {
+					return (DiamondSealCard) result;
 				} else {
-					return ((Series) result).getRandomCard();
+					return ((DiamondSealSeries) result).getRandomCard();
 				}
 			}
 		}
 		
-		return new Card("An error has occurred.");
+		return new DiamondSealCard("An error has occurred.");
 	}
 	
 	public ArrayList<DiamondSealEntity> getEntities(){
@@ -79,6 +79,16 @@ public class DiamondSeal {
 			names[i] = entities.get(i).getName();
 		}
 		return names;
+	}
+	
+	public String getInfo() {
+		String response = "**" + name + "**\n\n";
+		
+		for (int i = 0; i < entities.size(); i++) {
+			response += entities.get(i).getName() + " - " + (double) rates[i] / 10 + "%\n";
+		}
+		
+		return response;
 	}
 	
 	public int[] getRates() {

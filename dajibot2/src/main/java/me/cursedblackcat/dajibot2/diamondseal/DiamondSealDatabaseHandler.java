@@ -47,6 +47,7 @@ public class DiamondSealDatabaseHandler {
 		}
 
 		try {
+			name = name.replaceAll("'", "''");
 			String sql = "INSERT INTO DiamondSeals (Name, CommandName, Entities, EntityType, Rates) " +
 					"VALUES ('" + name + "', '" + commandName + "', '" + Arrays.toString(entities) + "', '" + entityType + "', '" + Arrays.toString(rates) + "');";
 			stmt.executeUpdate(sql);
@@ -57,7 +58,28 @@ public class DiamondSealDatabaseHandler {
 			return false;
 		}
 	}
+	
+	/**
+	 * Remove a seal from the list of diamond seal boxes.
+	 * @return True if the operation completed successfully, or false if an exception occurred.
+	 */
+	public boolean removeSeal(String commandName) {
+		try {
+			String sql = "DELETE FROM DiamondSeals WHERE CommandName='" + commandName + "';";
+			stmt.executeUpdate(sql);
+			stmt.close();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 
+	/**
+	 * Get all the saved diamond seal boxes.
+	 * @return An ArrayList of all the diamond seal boxes saved in the database.
+	 * @throws SQLException
+	 */
 	public ArrayList<DiamondSeal> getAllDiamondSeals() throws SQLException{
 		ArrayList<DiamondSeal> seals = new ArrayList<DiamondSeal>();
 		stmt = conn.createStatement();
@@ -72,7 +94,7 @@ public class DiamondSealDatabaseHandler {
 			case "Card":
 				String[] cardNames = toStringArray(rs.getString("Entities"));
 				for (String name : cardNames) {
-					builder.withCard(new Card(name));
+					builder.withCard(new DiamondSealCard(name));
 				}
 				break;
 			case "Series":
