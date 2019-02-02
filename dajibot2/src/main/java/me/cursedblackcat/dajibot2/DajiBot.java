@@ -295,7 +295,7 @@ public class DajiBot {
 			if (event.getMessageAuthor().asUser().get().isBotOwner()) {
 				handleCommand(parseCommand(event.getMessageContent()), event.getChannel(), true, event.getMessageAuthor().asUser().get());
 			} else if(event.getMessageContent().startsWith(prefix)) {
-			
+
 				try {
 					User author = event.getMessageAuthor().asUser().get();
 					Server server = event.getServer().get();
@@ -305,7 +305,11 @@ public class DajiBot {
 						handleCommand(parseCommand(event.getMessageContent()), event.getChannel(), false, author);
 					}
 				} catch (NoSuchElementException e) {
-					event.getChannel().sendMessage("Sorry, DajiBot doesn't work in DMs. Please try your command again in <#300630118932414464> on the Tower of Saviors Discord server.");
+					try {
+						event.getServer().get();
+					} catch (NoSuchElementException e1) {
+						event.getChannel().sendMessage("Sorry, DajiBot doesn't work in DMs. Please try your command again in <#300630118932414464> on the Tower of Saviors Discord server.");
+					}
 				}
 				catch (Exception e) {
 
