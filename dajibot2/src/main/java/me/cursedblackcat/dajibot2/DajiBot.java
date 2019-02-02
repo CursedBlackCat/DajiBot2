@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -266,7 +267,7 @@ public class DajiBot {
 
 		return false;
 	}
-	
+
 	public static User getUserById(long id){
 		try {
 			return api.getUserById(id).get();
@@ -275,7 +276,7 @@ public class DajiBot {
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
 
@@ -291,7 +292,10 @@ public class DajiBot {
 		api = new DiscordApiBuilder().setToken(token).login().join();
 
 		api.addMessageCreateListener(event -> {
-			if(event.getMessageContent().startsWith(prefix)) {
+			if (event.getMessageAuthor().asUser().get().isBotOwner()) {
+				handleCommand(parseCommand(event.getMessageContent()), event.getChannel(), true, event.getMessageAuthor().asUser().get());
+			} else if(event.getMessageContent().startsWith(prefix)) {
+			
 				try {
 					User author = event.getMessageAuthor().asUser().get();
 					Server server = event.getServer().get();
@@ -300,7 +304,11 @@ public class DajiBot {
 					} else {
 						handleCommand(parseCommand(event.getMessageContent()), event.getChannel(), false, author);
 					}
-				} catch (Exception e) {
+				} catch (NoSuchElementException e) {
+					event.getChannel().sendMessage("Sorry, DajiBot doesn't work in DMs. Please try your command again in <#300630118932414464> on the Tower of Saviors Discord server.");
+				}
+				catch (Exception e) {
+
 					e.printStackTrace();
 				}
 			}
