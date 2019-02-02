@@ -96,22 +96,21 @@ public class RewardsDatabaseHandler {
 			return null;
 		}
 	}
-
-	private static String[] toStringArray(String string) {
-		String[] strings = string.replace("[", "").replace("]", "").split("\\s*,\\s*");
-		String result[] = new String[strings.length];
-		for (int i = 0; i < result.length; i++) {
-			result[i] = strings[i];
+	
+	/**
+	 * Deletes all the uncollected reward entries that have expired.
+	 * @return True if the operation completed successfully, or false if an exception occurred.
+	 */
+	public boolean clearExpiredRewards() {
+		try {
+			long currentTime = new Date().getTime();
+			String sql = "DELETE FROM DiamondSeals WHERE ExpiryDate<" + currentTime + ";";
+			stmt.executeUpdate(sql);
+			stmt.close();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
 		}
-		return result;
-	}
-
-	private static int[] toIntArray(String string) {
-		String[] strings = string.replace("[", "").replace("]", "").split(", ");
-		int result[] = new int[strings.length];
-		for (int i = 0; i < result.length; i++) {
-			result[i] = Integer.parseInt(strings[i]);
-		}
-		return result;
 	}
 }
