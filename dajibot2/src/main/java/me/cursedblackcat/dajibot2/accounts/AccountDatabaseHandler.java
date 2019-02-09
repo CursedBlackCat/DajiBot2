@@ -12,8 +12,10 @@ import java.util.Date;
 import org.javacord.api.entity.user.User;
 
 import me.cursedblackcat.dajibot2.DajiBot;
+import me.cursedblackcat.dajibot2.diamondseal.DiamondSealCard;
 import me.cursedblackcat.dajibot2.rewards.ItemType;
 import me.cursedblackcat.dajibot2.rewards.Reward;
+import me.cursedblackcat.dajibot2.rewards.RewardsDatabaseHandler;
 
 /**
  * Class for handling database operations in the Diamond Seal table.
@@ -71,6 +73,11 @@ public class AccountDatabaseHandler {
 		}
 	}
 
+	/**
+	 * Get an Account for a given Discord user.
+	 * @param user The Discord user.
+	 * @return An Account with that Discord user's game account info.
+	 */
 	public Account getUserAccount(User user) {
 		try {
 			stmt = conn.createStatement();
@@ -78,8 +85,7 @@ public class AccountDatabaseHandler {
 
 			rs.next();
 
-
-			return new Account(user, rs.getInt("Coins"), rs.getInt("Diamonds"), rs.getInt("FriendPoints"), rs.getInt("Souls"));
+			return new Account(user, rs.getInt("Coins"), rs.getInt("Diamonds"), rs.getInt("FriendPoints"), rs.getInt("Souls"), deserializeIntArray(rs.getString("Inventory")));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -95,16 +101,71 @@ public class AccountDatabaseHandler {
 			stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM RegisteredUsers WHERE UserID=" + user.getId() + ";");
 
-			while (rs.next()) {			
-				return true;
-			}
-
-			return false;
+			return rs.next();
 		} catch (Exception e) {
 			return true;
 		}
 	}
 
+	/**
+	 * Adds a card to a user's inventory.
+	 * @param user The user to give the card to.
+	 * @param card The card to be added.
+	 * @return True if the operation completed successfully, or false if an exception occurred.
+	 */
+	public boolean addCardToAccount(User user, DiamondSealCard card) {
+		Account userAccount = getUserAccount(user);
+		ArrayList<Integer> inventory = userAccount.getInventory();
+		try {
+			inventory.add(DiamondSealCard.getCardIDFromName(card.getName()));
+			String sql = "UPDATE Accounts SET Inventory = '" + Arrays.toString(inventory.toArray(new Integer[inventory.size()])) + "' WHERE UserID = " + user.getIdAsString();
+			stmt.executeUpdate(sql);
+			stmt.close();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param user The user whose account the currency should be added to.
+	 * @param currency The type of currency to add.
+	 * @param amount The amount to add.
+	 * @return True if the operation completed successfully, or false if an exception occurred.
+	 */
+	public boolean addCurrencyToAccount(User user, ItemType currency, int amount) {
+		try {
+			String sql = "";
+			switch (currency) {
+			case DIAMOND:
+				sql = "UPDATE Accounts SET Diamonds = Diamonds + " + amount + " WHERE UserID = " + user.getIdAsString() + ";";
+				break;
+			case COIN:
+				sql = "UPDATE Accounts SET Coins = Coins + " + amount + " WHERE UserID = " + user.getIdAsString() + ";";
+				break;
+			case FRIEND_POINT:
+				sql = "UPDATE Accounts SET FriendPoints = FriendPoints + " + amount + " WHERE UserID = " + user.getIdAsString() + ";";
+				break;
+			case SOUL:
+				sql = "UPDATE Accounts SET Souls = Souls + " + amount + " WHERE UserID = " + user.getIdAsString() + ";";
+				break;
+			case CARD:
+				throw new IllegalArgumentException("Cannot call method addCurrencyToAccount on an ItemType of CARD");
+			}
+			stmt.executeUpdate(sql);
+			stmt.close();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
 	/**
 	 * 
 	 * @param user The user whose account the currency should be deducted from.
@@ -113,9 +174,9 @@ public class AccountDatabaseHandler {
 	 * @return True if the operation completed successfully, or false if an exception occurred.
 	 * @throws InsufficientCurrencyException
 	 */
-	public boolean deductCurrency(User user, ItemType currency, int amount) throws InsufficientCurrencyException {
+	public boolean deductCurrencyFromAccount(User user, ItemType currency, int amount) throws InsufficientCurrencyException {
 		Account userAccount = getUserAccount(user);
-		
+
 		try {
 			String sql = "";
 			switch (currency) {
@@ -144,7 +205,7 @@ public class AccountDatabaseHandler {
 				sql = "UPDATE Accounts SET Souls = Souls - " + amount + " WHERE UserID = " + user.getIdAsString() + " AND Souls >= " + amount;;
 				break;
 			case CARD:
-				throw new IllegalArgumentException("Cannot call method deductCurrency on an ItemType of CARD");
+				throw new IllegalArgumentException("Cannot call method deductCurrencyFromAccount on an ItemType of CARD");
 			}
 			stmt.executeUpdate(sql);
 			stmt.close();
@@ -162,7 +223,8 @@ public class AccountDatabaseHandler {
 	 * @return True if the operation completed successfully, or false if an exception occurred.
 	 */
 	public boolean claimReward(User user, Reward reward) {
-		try {	
+		try {
+			new RewardsDatabaseHandler().removeReward(reward);
 			String sql = "";
 			switch (reward.getItemType()) {
 			case DIAMOND:
@@ -187,6 +249,18 @@ public class AccountDatabaseHandler {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			return false;
 		}
+	}
+
+	private static int[] deserializeIntArray(String string) {
+		String[] strings = string.replace("[", "").replace("]", "").split(", ");
+		int result[] = new int[strings.length];
+		for (int i = 0; i < result.length; i++) {
+			result[i] = Integer.parseInt(strings[i]);
+		}
+		return result;
 	}
 }

@@ -1,10 +1,14 @@
 package me.cursedblackcat.dajibot2.accounts;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 import org.javacord.api.entity.user.User;
 
 import me.cursedblackcat.dajibot2.rewards.Reward;
+import me.cursedblackcat.dajibot2.rewards.RewardsDatabaseHandler;
 
 public class Account {
 	private User user;
@@ -25,14 +29,24 @@ public class Account {
 		diamonds = 5;
 		friendPoints = 2000;
 		souls = 0;
+		inventory.add(1);
 	}
 
-	public Account(User u, int c, int d, int fp, int s) {
+	public Account(User u, int c, int d, int fp, int s, int[] inv) throws ClassNotFoundException, SQLException {
 		user = u;
 		coins = c;
 		diamonds = d;
 		friendPoints = fp;
 		souls = s;
+		
+		rewardsInbox = new RewardsDatabaseHandler().getRewardsForUser(u);
+		
+		ArrayList<Integer> temp = new ArrayList<Integer>();
+		for (int i : inv) {
+			temp.add(i);
+		}
+		inventory = temp;
+		Collections.sort(inventory);
 	}
 
 	public User getUser() {
@@ -53,6 +67,10 @@ public class Account {
 	
 	public int getSouls() {
 		return souls;
+	}
+	
+	public ArrayList<Reward> getRewards(){
+		return rewardsInbox;
 	}
 
 	public ArrayList<Integer> getInventory(){

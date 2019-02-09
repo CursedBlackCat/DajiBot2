@@ -82,9 +82,10 @@ public class RewardsDatabaseHandler {
 	 */
 	public ArrayList<Reward> getRewardsForUser(User user) throws SQLException{
 		try {
+			long currentTime = new Date().getTime();
 			ArrayList<Reward> rewards = new ArrayList<Reward>();
 			stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * FROM Rewards WHERE UserID=" + user.getId() + ";");
+			ResultSet rs = stmt.executeQuery("SELECT * FROM Rewards WHERE UserID=" + user.getId() + " AND ExpiryDate>=" + currentTime + ";");
 
 			while (rs.next()) {			
 				Reward reward = new Reward(DajiBot.getUserById(rs.getLong("UserID")), ItemType.valueOf(rs.getString("ItemType")), rs.getInt("Amount"), new Date(rs.getLong("ExpiryDate")), rs.getInt("CardID"));

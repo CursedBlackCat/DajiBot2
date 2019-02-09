@@ -24,9 +24,12 @@ import org.javacord.api.util.event.ListenerManager;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSealCard;
 import me.cursedblackcat.dajibot2.accounts.Account;
 import me.cursedblackcat.dajibot2.accounts.AccountDatabaseHandler;
+import me.cursedblackcat.dajibot2.accounts.InsufficientCurrencyException;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSeal;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSealBuilder;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSealDatabaseHandler;
+import me.cursedblackcat.dajibot2.rewards.ItemType;
+import me.cursedblackcat.dajibot2.rewards.Reward;
 
 /**
  * The main class of the program.
@@ -41,18 +44,21 @@ public class DajiBot {
 			"~~~General commands~~~\n" + 
 			"help - Shows this menu\n\n" +
 			"~~~Diamond seal simulator commands~~~\n" + 
-			"diamondseal <sealname> - Pull a card from the diamond seal simulator\n\n" +
+			"diamondseal <sealname> - Use 5 diamonds from your account to pull a card from the diamond seal simulator.\n\n" +
+			"simulateseal <sealname> - Simulates pulling a card from the diamond seal simulator. Does not cost you diamonds, but doesn't give you the card.\n\n" +
 			"listseals - List all diamond seal banners in the diamond seal simulator\n\n" +
 			"sealinfo <sealname> - Check available cards/series and their rates in a seal banner.\n\n" +
 			"~~~Account commands~~~\n" + 
 			"register - Register your Discord account with DajiBot.\n\n" +
 			"rewards - List all of your unclaimed rewards.\n\n" +
 			"accountinfo - View your account info.\n\n" +
-			"inventory - View your card inventory.\n\n" +
+			"inventory <pagenumber> - View your card inventory.\n\n" +
 			"~~~Admin commands~~~\n" + 
 			"changeprefix - Change the bot's command prefix. Can only be run by people with admin permissions.\n\n" + 
 			"createseal - Create a new diamond seal machine. Can only be run by people with admin permissions.\n\n" + 
 			"deleteseal - Delete a diamond seal machine. Can only be run by people with admin permissions.\n\n" + 
+			"~~~Bot owner commands~~~\n" + 
+			"addcurrency <@user> <type> <amount> - Add currency to a user. Can only be run by the bot owner.\n\n" + 
 			"```";
 
 	private	static String prefix = "$";
@@ -62,7 +68,10 @@ public class DajiBot {
 
 	private static final long[] privilegedRoleIDs =
 		{
-				541008546280505344L
+				541008546280505344L,
+				294141628057124864L,
+				294141638958120970L,
+				304076853977677825L
 		};
 
 	private static final long ownerID = 226767560211693568L;
@@ -95,9 +104,29 @@ public class DajiBot {
 			channel.sendMessage(user.getMentionTag() + "\n" + helpText);
 			break;
 		case "diamondseal":
+			if (!accountDBHandler.userAlreadyExists(user)) {
+				channel.sendMessage(user.getMentionTag() + " Please register first by running  the `register` command.");
+				return;
+			}
+
+			try {
+				accountDBHandler.deductCurrencyFromAccount(user, ItemType.DIAMOND, 5);
+				DiamondSeal seal = getDiamondSealByCommandName(c.getArguments()[0]);
+				DiamondSealCard result = seal.drawFromMachine();
+				accountDBHandler.addCardToAccount(user, result);
+				channel.sendMessage(user.getMentionTag() + " You pulled `" + result.getName() + "` from " + seal.getName() +  "! The card has been added to your inventory.");
+			} catch (NullPointerException e) {
+				channel.sendMessage(user.getMentionTag() + " No such diamond seal `" + c.getArguments()[0] + "`");
+			} catch (ArrayIndexOutOfBoundsException e) {
+				channel.sendMessage(user.getMentionTag() + " Please specify a diamond seal banner. Run `" + "listseals" + "` for a list of diamond seal banners.");
+			} catch (InsufficientCurrencyException e) {
+				channel.sendMessage(user.getMentionTag() + " You have insufficient diamonds to perform a diamond seal.");
+			}
+			break;
+		case "simulateseal":
 			try {
 				DiamondSeal seal = getDiamondSealByCommandName(c.getArguments()[0]);
-				channel.sendMessage(user.getMentionTag() + " You pulled `" + seal.drawFromMachine().getName() + "` from " + seal.getName() +  "!");
+				channel.sendMessage(user.getMentionTag() + " You pulled `" + seal.drawFromMachine().getName() + "` from " + seal.getName() +  "! As this was a free simulated pull, the card was not added to your inventory.");
 
 			} catch (NullPointerException e) {
 				channel.sendMessage(user.getMentionTag() + " No such diamond seal `" + c.getArguments()[0] + "`");
@@ -141,14 +170,52 @@ public class DajiBot {
 				}
 			}
 			break;
-		case "rewards": //TODO
+		case "rewards": //TODO make sure this code works
+			if (!accountDBHandler.userAlreadyExists(user)) {
+				channel.sendMessage(user.getMentionTag() + " Please register first by running  the `register` command.");
+				return;
+			}
+			EmbedBuilder rewardsEmbed = new EmbedBuilder();
+			ArrayList<Reward> rewards = accountDBHandler.getUserAccount(user).getRewards();
+
+			rewardsEmbed.setAuthor(user)
+			.setTitle("Rewards")
+			.setColor(Color.MAGENTA) //TODO check which attribute role user has
+			.setFooter("DajiBot v2", "https://cdn.discordapp.com/app-icons/293148175013773312/9ec4cdaabd88f0902a7ea2eddab5a827.png");
+
+			for (Reward r : rewards) {
+				switch (r.getItemType()) {
+				case DIAMOND:
+					rewardsEmbed.addField("Diamond x" + r.getAmount(), "");
+					break;
+				case COIN:
+					rewardsEmbed.addField("Coin x" + r.getAmount(), "");
+					break;
+				case FRIEND_POINT:
+					rewardsEmbed.addField("Friend Point x" + r.getAmount(), "");
+					break;
+				case SOUL:
+					rewardsEmbed.addField("Soul x" + r.getAmount(), "");
+					break;
+				case CARD:
+					rewardsEmbed.addField(DiamondSealCard.getCardNameFromID(r.getCardID()) + " x" + r.getAmount(), "");
+					break;
+				}
+			}
+
+			channel.sendMessage(rewardsEmbed);
 			break;
+		case "info":
 		case "accountinfo":
+			if (!accountDBHandler.userAlreadyExists(user)) {
+				channel.sendMessage(user.getMentionTag() + " Please register first by running  the `register` command.");
+				return;
+			}
 			Account account = accountDBHandler.getUserAccount(user);
 			EmbedBuilder embedBuilder = new EmbedBuilder();
 			embedBuilder.setAuthor(user)
 			.setTitle("Account Info")
-			.setColor(Color.MAGENTA)
+			.setColor(Color.MAGENTA) //TODO check which attribute role user has
 			.addField("Diamonds", String.valueOf(account.getDiamonds()))
 			.addField("Coins", String.valueOf(account.getCoins()))
 			.addField("Friend Points", String.valueOf(account.getFriendPoints()))
@@ -156,8 +223,50 @@ public class DajiBot {
 			.setFooter("DajiBot v2", "https://cdn.discordapp.com/app-icons/293148175013773312/9ec4cdaabd88f0902a7ea2eddab5a827.png");
 			channel.sendMessage(embedBuilder);
 			break;
+		case "inv":
 		case "viewinventory":
-		case "inventory": //TODO
+		case "inventory":
+			if (!accountDBHandler.userAlreadyExists(user)) {
+				channel.sendMessage(user.getMentionTag() + " Please register first by running  the `register` command.");
+				return;
+			}
+
+			ArrayList<Integer> inventory = accountDBHandler.getUserAccount(user).getInventory();
+
+			int page = -1;
+
+			try {
+				page = Integer.parseInt(c.getArguments()[0]);
+			} catch (Exception e) {
+				page = 1;
+			}
+
+			int maxPage = (int) Math.round(Math.ceil(inventory.size() / 5.0));
+
+			EmbedBuilder inventoryEmbed = new EmbedBuilder();
+			inventoryEmbed.setAuthor(user)
+			.setTitle("Inventory - " + inventory.size() + " cards total")
+			.setColor(Color.MAGENTA) //TODO check which attribute role user has
+			.setFooter("Page " + page + " of " + maxPage +" | DajiBot v2", "https://cdn.discordapp.com/app-icons/293148175013773312/9ec4cdaabd88f0902a7ea2eddab5a827.png");
+			int startBound = 5 * (page - 1);
+			int endBound = startBound + 5;
+
+			for (int i = startBound; i < endBound; i++) {
+				try{
+					if (inventory.get(i) == 0) {
+						inventoryEmbed.addField(DiamondSealCard.getCardNameFromID(inventory.get(i)), "Lv. MAX (99), Skill Lv. 15");
+
+					} else {
+						inventoryEmbed.addField(DiamondSealCard.getCardNameFromID(inventory.get(i)), "Lv. 1, Skill Lv. 1"); //TODO implement card leveling
+					}
+				} catch (IndexOutOfBoundsException e) {
+					//end of list was reached, pass
+				}
+			}
+
+			if (!(page > maxPage)){
+				channel.sendMessage(inventoryEmbed);
+			}
 			break;
 		case "changeprefix":
 			if (privileged) {
@@ -236,6 +345,53 @@ public class DajiBot {
 				channel.sendMessage(user.getMentionTag() + " You do not have permissions to run this command!");
 			}
 			break;
+		case "addcurrency":
+		case "addcurr":
+		case "addcur":
+			if (user.isBotOwner()) {
+				//user type amt
+				try {
+					User targetUser = api.getUserById(c.getArguments()[0].replaceAll("[^0-9]", "")).get();
+					ItemType type;
+					int amount = Integer.parseInt(c.getArguments()[2]);
+					switch (c.getArguments()[1].toLowerCase()) {
+					case "diamond":
+					case "diamonds":
+						type = ItemType.DIAMOND;
+						break;
+					case "coin":
+					case "coins":
+						type = ItemType.COIN;
+						break;
+					case "friendpoint":
+					case "friendpoints":
+						type = ItemType.FRIEND_POINT;
+						break;
+					case "soul":
+					case "souls":
+						type = ItemType.SOUL;
+						break;
+					default:
+						channel.sendMessage(user.getMentionTag() + " Please specify a currency type, one of `diamond coin friendpoint soul`");
+						return;
+					}
+					
+					accountDBHandler.addCurrencyToAccount(targetUser, type, amount);
+					channel.sendMessage(user.getMentionTag() + " Currency successfully added.");
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					channel.sendMessage(user.getMentionTag() + " Error occurred: InterruptedException. See stack trace for more info");
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+					channel.sendMessage(user.getMentionTag() + " Error occurred: ExecutionException. See stack trace for more info");
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
+					channel.sendMessage(user.getMentionTag() + " Please enter a proper amount.");
+				}
+			} else {
+				channel.sendMessage(user.getMentionTag() + " You do not have permissions to run this command!");
+			}
+			break;
 		}
 	}
 
@@ -278,7 +434,7 @@ public class DajiBot {
 		}
 
 		return null;
-	}
+	}	
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
 		BufferedReader bufferedReader = new BufferedReader(new FileReader("token.txt"));
@@ -292,7 +448,7 @@ public class DajiBot {
 		api = new DiscordApiBuilder().setToken(token).login().join();
 
 		api.addMessageCreateListener(event -> {
-			if (event.getMessageAuthor().asUser().get().isBotOwner()) {
+			if (event.getMessageAuthor().asUser().get().isBotOwner() && event.getMessageContent().startsWith(prefix)) {
 				handleCommand(parseCommand(event.getMessageContent()), event.getChannel(), true, event.getMessageAuthor().asUser().get());
 			} else if(event.getMessageContent().startsWith(prefix)) {
 
