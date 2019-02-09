@@ -42,7 +42,7 @@ public class AccountDatabaseHandler {
 				" Souls           INTEGER    NOT NULL, " + //Amount of souls
 				" Inventory       STRING     NOT NULL)"; //Arrays.toString format of all card IDs in this user's inventory
 		stmt.executeUpdate(sql);
-		
+
 		sql = "CREATE TABLE IF NOT EXISTS RegisteredUsers " +
 				"(ID INTEGER PRIMARY KEY AUTOINCREMENT     NOT NULL," +
 				" UserID          INTEGER    NOT NULL)"; //User's Discord ID
@@ -59,7 +59,7 @@ public class AccountDatabaseHandler {
 			String sql = "INSERT INTO Accounts (UserID, Coins, Diamonds, FriendPoints, Souls, Inventory) " +
 					"VALUES (" + account.getUser().getId() + ", " + account.getCoins() + ", " + account.getDiamonds() + ", " + account.getFriendPoints() + ", " + account.getSouls() + ", '" +  Arrays.toString(account.getInventoryAsArray()) + "');";
 			stmt.executeUpdate(sql);
-			
+
 			sql = "INSERT INTO RegisteredUsers (UserID) " +
 					"VALUES (" + account.getUser().getId() + ");";
 			stmt.executeUpdate(sql);
@@ -70,22 +70,22 @@ public class AccountDatabaseHandler {
 			return false;
 		}
 	}
-	
+
 	public Account getUserAccount(User user) {
 		try {
 			stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM Accounts WHERE UserID=" + user.getId() + ";");
 
 			rs.next();
-			
-			
+
+
 			return new Account(user, rs.getInt("Coins"), rs.getInt("Diamonds"), rs.getInt("FriendPoints"), rs.getInt("Souls"));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Checks if a user is already registered.
 	 * @return
@@ -104,15 +104,83 @@ public class AccountDatabaseHandler {
 			return true;
 		}
 	}
-	
+
+	/**
+	 * 
+	 * @param user The user whose account the currency should be deducted from.
+	 * @param currency The type of currency to deduct.
+	 * @param amount The amount to deduct.
+	 * @return True if the operation completed successfully, or false if an exception occurred.
+	 * @throws InsufficientCurrencyException
+	 */
+	public boolean deductCurrency(User user, ItemType currency, int amount) throws InsufficientCurrencyException {
+		Account userAccount = getUserAccount(user);
+		
+		try {
+			String sql = "";
+			switch (currency) {
+			case DIAMOND:
+				if (userAccount.getDiamonds() < amount) {
+					throw new InsufficientCurrencyException();
+				}
+				sql = "UPDATE Accounts SET Diamonds = Diamonds - " + amount + " WHERE UserID = " + user.getIdAsString() + " AND Diamonds >= " + amount;
+				break;
+			case COIN:
+				if (userAccount.getCoins() < amount) {
+					throw new InsufficientCurrencyException();
+				}
+				sql = "UPDATE Accounts SET Coins = Coins - " + amount + " WHERE UserID = " + user.getIdAsString() + " AND Coins >= " + amount;
+				break;
+			case FRIEND_POINT:
+				if (userAccount.getFriendPoints() < amount) {
+					throw new InsufficientCurrencyException();
+				}
+				sql = "UPDATE Accounts SET FriendPoints = FriendPoints - " + amount + " WHERE UserID = " + user.getIdAsString() + " AND FriendPoints >= " + amount;
+				break;
+			case SOUL:
+				if (userAccount.getSouls() < amount) {
+					throw new InsufficientCurrencyException();
+				}
+				sql = "UPDATE Accounts SET Souls = Souls - " + amount + " WHERE UserID = " + user.getIdAsString() + " AND Souls >= " + amount;;
+				break;
+			case CARD:
+				throw new IllegalArgumentException("Cannot call method deductCurrency on an ItemType of CARD");
+			}
+			stmt.executeUpdate(sql);
+			stmt.close();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	/**
 	 * Claim a reward.
+	 * @param user The user whose account the reward should be added to
+	 * @param reward Information about the reward to be added.
 	 * @return True if the operation completed successfully, or false if an exception occurred.
 	 */
 	public boolean claimReward(User user, Reward reward) {
 		try {	
-			//TODO claim rewards
 			String sql = "";
+			switch (reward.getItemType()) {
+			case DIAMOND:
+				sql = "UPDATE Accounts SET Diamonds = Diamonds + " + reward.getAmount() + " WHERE UserID = " + reward.getUser().getIdAsString();
+				break;
+			case COIN:
+				sql = "UPDATE Accounts SET Coins = Coins + " + reward.getAmount() + " WHERE UserID = " + reward.getUser().getIdAsString();
+				break;
+			case FRIEND_POINT:
+				sql = "UPDATE Accounts SET FriendPoints = FriendPoints + " + reward.getAmount() + " WHERE UserID = " + reward.getUser().getIdAsString();
+				break;
+			case SOUL:
+				sql = "UPDATE Accounts SET Souls = Souls + " + reward.getAmount() + " WHERE UserID = " + reward.getUser().getIdAsString();
+				break;
+			case CARD:
+				//TODO add card to inventory
+				break;
+			}
 			stmt.executeUpdate(sql);
 			stmt.close();
 			return true;

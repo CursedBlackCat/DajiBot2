@@ -312,7 +312,6 @@ public class DajiBot {
 					}
 				}
 				catch (Exception e) {
-
 					e.printStackTrace();
 				}
 			}
