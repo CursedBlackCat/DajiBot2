@@ -5,9 +5,16 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.javacord.api.DiscordApi;
@@ -30,6 +37,7 @@ import me.cursedblackcat.dajibot2.diamondseal.DiamondSealDatabaseHandler;
 import me.cursedblackcat.dajibot2.rewards.ItemType;
 import me.cursedblackcat.dajibot2.rewards.Reward;
 import me.cursedblackcat.dajibot2.rewards.RewardsDatabaseHandler;
+import me.cursedblackcat.dajibot2.rewards.DailyRewardsCron;
 
 /**
  * The main class of the program.
@@ -50,6 +58,7 @@ public class DajiBot {
 			"sealinfo <sealname> - Check available cards/series and their rates in a seal banner.\n\n" +
 			"~~~Account commands~~~\n" + 
 			"register - Register your Discord account with DajiBot.\n\n" +
+			"daily - Collect your daily diamond reward." +
 			"rewards - List all of your unclaimed rewards.\n\n" +
 			"collect <n> - Collect reward number <n> in your rewards inbox." +
 			"accountinfo - View your account info.\n\n" +
@@ -172,6 +181,35 @@ public class DajiBot {
 				}
 			}
 			break;
+		case "daily":
+			if (!accountDBHandler.userAlreadyExists(user)) {
+				channel.sendMessage(user.getMentionTag() + " Please register first by running  the `register` command.");
+				return;
+			}
+			
+			if (accountDBHandler.dailyRewardAlreadyCollected(user)) {
+				channel.sendMessage(user.getMentionTag() + " You have already collected your daily reward.");
+				return;
+			}
+			
+			accountDBHandler.collectDailyReward(user);
+			Date now = new Date();
+			SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d");
+			
+			Calendar cal = Calendar.getInstance();
+	        cal.add(Calendar.DAY_OF_MONTH, 1);
+	        cal.set(Calendar.HOUR_OF_DAY, 0);
+	        cal.set(Calendar.MINUTE, 0);
+	        cal.set(Calendar.SECOND, 0);
+	        cal.set(Calendar.MILLISECOND, 0);
+	        long millisecondsUntilMidnight = (cal.getTimeInMillis()-System.currentTimeMillis());
+	        Date tomorrow = new Date(now.getTime() + millisecondsUntilMidnight - 1000);
+
+			Reward dailyReward = new Reward(user, ItemType.DIAMOND, 1, tomorrow, -1, "Daily Login Reward - " + dateFormat.format(now));
+			rewardsDBHandler.addReward(dailyReward);
+			
+			channel.sendMessage(user.getMentionTag() + " Your daily reward of Diamond x1 has been sent to your rewards inbox. Run the `rewards` command to see your rewards inbox.");
+			break;
 		case "rewards":
 			if (!accountDBHandler.userAlreadyExists(user)) {
 				channel.sendMessage(user.getMentionTag() + " Please register first by running  the `register` command.");
@@ -198,7 +236,7 @@ public class DajiBot {
 			EmbedBuilder rewardsEmbed = new EmbedBuilder();
 			rewardsEmbed.setAuthor(user)
 			.setTitle("Rewards - " + rewards.size() + " rewards total")
-			.setColor(Color.MAGENTA) //TODO check which attribute role user has
+			.setColor(Color.MAGENTA)
 			.setFooter("Page " + rewardsPage  + " of " + rewardsMaxPage +" | DajiBot v2", "https://cdn.discordapp.com/app-icons/293148175013773312/9ec4cdaabd88f0902a7ea2eddab5a827.png");
 			int rewardsStartBound = 5 * (rewardsPage - 1);
 			int rewardsEndBound = rewardsStartBound + 5;
@@ -227,7 +265,7 @@ public class DajiBot {
 							type = "An error occurred";
 							break;
 						}
-						rewardsEmbed.addField((i + 1) + ". " + reward.getText(), type + " x" + reward.getAmount());
+						rewardsEmbed.addField((i + 1) + ". " + reward.getText(), type + " x" + reward.getAmount() + "\nExpires " + reward.getExpiryDate());
 					}
 				} catch (IndexOutOfBoundsException e) {
 					//end of list was reached, pass
@@ -301,7 +339,7 @@ public class DajiBot {
 			EmbedBuilder embedBuilder = new EmbedBuilder();
 			embedBuilder.setAuthor(user)
 			.setTitle("Account Info")
-			.setColor(Color.MAGENTA) //TODO check which attribute role user has
+			.setColor(Color.MAGENTA)
 			.addField("Diamonds", String.valueOf(account.getDiamonds()))
 			.addField("Coins", String.valueOf(account.getCoins()))
 			.addField("Friend Points", String.valueOf(account.getFriendPoints()))
@@ -332,7 +370,7 @@ public class DajiBot {
 			EmbedBuilder inventoryEmbed = new EmbedBuilder();
 			inventoryEmbed.setAuthor(user)
 			.setTitle("Inventory - " + inventory.size() + " cards total")
-			.setColor(Color.MAGENTA) //TODO check which attribute role user has
+			.setColor(Color.MAGENTA)
 			.setFooter("Page " + page + " of " + maxPage +" | DajiBot v2", "https://cdn.discordapp.com/app-icons/293148175013773312/9ec4cdaabd88f0902a7ea2eddab5a827.png");
 			int startBound = 5 * (page - 1);
 			int endBound = startBound + 5;
@@ -381,6 +419,7 @@ public class DajiBot {
 									if(event2.getMessageAuthor().asUser().get() == user) {
 										String[] cardNames = event2.getMessageContent().split("\\s*,\\s*");
 										for (String name : cardNames) {
+											name.replaceAll("'", "''");
 											builder.withCard(new DiamondSealCard(name));
 										}
 										listenerManager.remove();
@@ -523,6 +562,23 @@ public class DajiBot {
 	}	
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
+		ScheduledExecutorService ses = Executors.newScheduledThreadPool(1);
+		DailyRewardsCron task = new DailyRewardsCron("Daily rewards");
+		
+		Calendar c = Calendar.getInstance();
+        c.add(Calendar.DAY_OF_MONTH, 1);
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        long millisecondsUntilMidnight = (c.getTimeInMillis()-System.currentTimeMillis());
+        
+        //Run the task starting at the moment of the upcoming midnight, then subsequently run the task again every midnight afterwards
+		ScheduledFuture<?> scheduledFuture = ses.scheduleAtFixedRate(task, millisecondsUntilMidnight, 86400000, TimeUnit.MILLISECONDS);
+		
+		System.out.println("Daily reward collection flag reset task scheduled! Next execution is " + new Date(new Date().getTime() + scheduledFuture.getDelay(TimeUnit.MILLISECONDS)));
+		
+		
 		BufferedReader bufferedReader = new BufferedReader(new FileReader("token.txt"));
 		String token = bufferedReader.readLine();
 		bufferedReader.close();

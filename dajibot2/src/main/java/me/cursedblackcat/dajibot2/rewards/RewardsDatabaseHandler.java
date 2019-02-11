@@ -50,7 +50,8 @@ public class RewardsDatabaseHandler {
 	public boolean addReward(Reward reward) {
 		try {	
 			String sql = "INSERT INTO Rewards (UserID, ItemType, Amount, ExpiryDate, CardID, Text) " +
-					"VALUES (" + reward.getUser().getId() + ", '" + reward.getItemType() + "', '" + reward.getAmount() + "', '" + reward.getExpiryDate().getTime() + ", " + reward.getCardID() + ", ', '" + reward.getText() + "');";
+					"VALUES (" + reward.getUser().getId() + ", '" + reward.getItemType() + "', '" + reward.getAmount() + "', '" + reward.getExpiryDate().getTime() + "', " + reward.getCardID() + ", '" + reward.getText() + "');";
+			System.out.println(sql);
 			stmt.executeUpdate(sql);
 			stmt.close();
 			return true;

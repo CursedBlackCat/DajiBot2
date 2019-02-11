@@ -45,7 +45,8 @@ public class AccountDatabaseHandler {
 
 		sql = "CREATE TABLE IF NOT EXISTS RegisteredUsers " +
 				"(ID INTEGER PRIMARY KEY AUTOINCREMENT     NOT NULL," +
-				" UserID          INTEGER    NOT NULL)"; //User's Discord ID
+				" UserID          INTEGER    NOT NULL," + // User's Discord ID
+				" DailyRewardCollected INTEGER    NOT NULL)"; //0 if user hasn't collected daily diamond yet, 1 if they have. Resets to 0 at midnight
 		stmt.executeUpdate(sql);
 		stmt.close();
 	}
@@ -60,8 +61,8 @@ public class AccountDatabaseHandler {
 					"VALUES (" + account.getUser().getId() + ", " + account.getCoins() + ", " + account.getDiamonds() + ", " + account.getFriendPoints() + ", " + account.getSouls() + ", '" +  Arrays.toString(account.getInventoryAsArray()) + "');";
 			stmt.executeUpdate(sql);
 
-			sql = "INSERT INTO RegisteredUsers (UserID) " +
-					"VALUES (" + account.getUser().getId() + ");";
+			sql = "INSERT INTO RegisteredUsers (UserID, DailyRewardCollected) " +
+					"VALUES (" + account.getUser().getId() + ", 0);";
 			stmt.executeUpdate(sql);
 			stmt.close();
 			return true;
@@ -98,10 +99,56 @@ public class AccountDatabaseHandler {
 		try {
 			stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM RegisteredUsers WHERE UserID=" + user.getId() + ";");
-
+			
 			return rs.next();
 		} catch (Exception e) {
 			return true;
+		}
+	}
+	
+	/**
+	 * Returns whether a user has collected their daily reward.
+	 * @param user The Discord user to check.
+	 * @return Whether the user has collected their daily reward or not.
+	 */
+	public boolean dailyRewardAlreadyCollected(User user) {
+		try {
+			stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM RegisteredUsers WHERE UserID=" + user.getId() + ";");
+			return rs.getBoolean("DailyRewardCollected");
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return true;
+		}
+	}
+	
+	/**
+	 * Marks a user has having collected their daily reward.
+	 * @param user The Discord user to mark.
+	 * @return True if the operation completed successfully, or false otherwise.
+	 */
+	public boolean collectDailyReward(User user) {
+		try {
+			stmt = conn.createStatement();
+			stmt.executeUpdate("UPDATE RegisteredUsers SET DailyRewardCollected = 1 WHERE UserID=" + user.getId() + ";");
+			stmt.close();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	/**
+	 * Reset everyone's daily reward collection flag.
+	 */
+	public void resetDailyRewards() {
+		try {
+			stmt = conn.createStatement();
+			stmt.executeUpdate("UPDATE RegisteredUsers SET DailyRewardCollected = 0;");
+			stmt.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 	}
 
