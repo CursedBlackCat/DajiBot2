@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
 
@@ -30,6 +29,7 @@ import me.cursedblackcat.dajibot2.diamondseal.DiamondSealBuilder;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSealDatabaseHandler;
 import me.cursedblackcat.dajibot2.rewards.ItemType;
 import me.cursedblackcat.dajibot2.rewards.Reward;
+import me.cursedblackcat.dajibot2.rewards.RewardsDatabaseHandler;
 
 /**
  * The main class of the program.
@@ -51,6 +51,7 @@ public class DajiBot {
 			"~~~Account commands~~~\n" + 
 			"register - Register your Discord account with DajiBot.\n\n" +
 			"rewards - List all of your unclaimed rewards.\n\n" +
+			"collect <n> - Collect reward number <n> in your rewards inbox." +
 			"accountinfo - View your account info.\n\n" +
 			"inventory <pagenumber> - View your card inventory.\n\n" +
 			"~~~Admin commands~~~\n" + 
@@ -80,6 +81,7 @@ public class DajiBot {
 
 	private static DiamondSealDatabaseHandler sealDBHandler;
 	private static AccountDatabaseHandler accountDBHandler;
+	private static RewardsDatabaseHandler rewardsDBHandler;
 
 	public static ExecutedCommand parseCommand(String message) {
 		String[] parts = message.split("\\s+");
@@ -170,40 +172,124 @@ public class DajiBot {
 				}
 			}
 			break;
-		case "rewards": //TODO make sure this code works
+		case "rewards":
 			if (!accountDBHandler.userAlreadyExists(user)) {
 				channel.sendMessage(user.getMentionTag() + " Please register first by running  the `register` command.");
 				return;
 			}
-			EmbedBuilder rewardsEmbed = new EmbedBuilder();
+
 			ArrayList<Reward> rewards = accountDBHandler.getUserAccount(user).getRewards();
+			
+			if (rewards.size() == 0) {
+				channel.sendMessage(user.getMentionTag() + " You do not currently have any rewards to be collected.");
+				return;
+			}
 
+			int rewardsPage = -1;
+
+			try {
+				rewardsPage = Integer.parseInt(c.getArguments()[0]);
+			} catch (Exception e) {
+				rewardsPage = 1;
+			}
+
+			int rewardsMaxPage = (int) Math.round(Math.ceil(rewards.size() / 5.0));
+
+			EmbedBuilder rewardsEmbed = new EmbedBuilder();
 			rewardsEmbed.setAuthor(user)
-			.setTitle("Rewards")
+			.setTitle("Rewards - " + rewards.size() + " rewards total")
 			.setColor(Color.MAGENTA) //TODO check which attribute role user has
-			.setFooter("DajiBot v2", "https://cdn.discordapp.com/app-icons/293148175013773312/9ec4cdaabd88f0902a7ea2eddab5a827.png");
+			.setFooter("Page " + rewardsPage  + " of " + rewardsMaxPage +" | DajiBot v2", "https://cdn.discordapp.com/app-icons/293148175013773312/9ec4cdaabd88f0902a7ea2eddab5a827.png");
+			int rewardsStartBound = 5 * (rewardsPage - 1);
+			int rewardsEndBound = rewardsStartBound + 5;
 
-			for (Reward r : rewards) {
-				switch (r.getItemType()) {
-				case DIAMOND:
-					rewardsEmbed.addField("Diamond x" + r.getAmount(), "");
-					break;
-				case COIN:
-					rewardsEmbed.addField("Coin x" + r.getAmount(), "");
-					break;
-				case FRIEND_POINT:
-					rewardsEmbed.addField("Friend Point x" + r.getAmount(), "");
-					break;
-				case SOUL:
-					rewardsEmbed.addField("Soul x" + r.getAmount(), "");
-					break;
-				case CARD:
-					rewardsEmbed.addField(DiamondSealCard.getCardNameFromID(r.getCardID()) + " x" + r.getAmount(), "");
-					break;
+			for (int i = rewardsStartBound; i < rewardsEndBound; i++) {
+				try{
+					Reward reward = rewards.get(i);
+					if (reward.getItemType() == ItemType.CARD) {
+						rewardsEmbed.addField((i + 1) + ". " + reward.getText(), DiamondSealCard.getCardNameFromID(reward.getCardID()) + " x" + reward.getAmount());
+					} else {
+						String type = "";
+						switch (reward.getItemType()) {
+						case DIAMOND:
+							type = "Diamond";
+							break;
+						case COIN:
+							type = "Coin";
+							break;
+						case FRIEND_POINT:
+							type = "Friend Point";
+							break;
+						case SOUL:
+							type = "Soul";
+							break;
+						default:
+							type = "An error occurred";
+							break;
+						}
+						rewardsEmbed.addField((i + 1) + ". " + reward.getText(), type + " x" + reward.getAmount());
+					}
+				} catch (IndexOutOfBoundsException e) {
+					//end of list was reached, pass
 				}
 			}
 
-			channel.sendMessage(rewardsEmbed);
+			if (!(rewardsPage > rewardsMaxPage)){
+				channel.sendMessage(rewardsEmbed);
+			}
+			break;
+		case "collect":
+		case "claim":
+			if (!accountDBHandler.userAlreadyExists(user)) {
+				channel.sendMessage(user.getMentionTag() + " Please register first by running  the `register` command.");
+				return;
+			}
+
+			ArrayList<Reward> userRewards = accountDBHandler.getUserAccount(user).getRewards();
+			
+			if (userRewards.size() == 0) {
+				channel.sendMessage(user.getMentionTag() + " You do not currently have any rewards to be collected.");
+				return;
+			}
+			
+			try {
+				int targetRewardIndex = Integer.parseInt(c.getArguments()[0]) - 1;
+				
+				Reward claimTargetReward = userRewards.get(targetRewardIndex);
+				
+				boolean a = rewardsDBHandler.removeReward(claimTargetReward);
+				boolean b = accountDBHandler.claimReward(user, claimTargetReward);
+				if (!(a && b)){
+					channel.sendMessage(user.getMentionTag() + " An error was encountered while claiming your reward (SQLException).");
+				} else {
+					String type = "";
+					switch (claimTargetReward.getItemType()) {
+					case DIAMOND:
+						type = "Diamond";
+						break;
+					case COIN:
+						type = "Coin";
+						break;
+					case FRIEND_POINT:
+						type = "Friend Point";
+						break;
+					case SOUL:
+						type = "Soul";
+						break;
+					case CARD:
+						type = DiamondSealCard.getCardNameFromID(claimTargetReward.getCardID());
+						break;
+					default:
+						type = "An error occurred";
+						break;
+					}
+					channel.sendMessage(user.getMentionTag() + " You have successfully claimed " + type + " x" + claimTargetReward.getAmount() + ".");
+				}
+			} catch (NumberFormatException e) {
+				channel.sendMessage(user.getMentionTag() + " Please enter the number of the reward you want to claim. Run the `rewards` command to see all your rewards.");
+			} catch (ArrayIndexOutOfBoundsException e) {
+				channel.sendMessage(user.getMentionTag() + " Please enter the number of the reward you want to claim. Run the `rewards` command to see all your rewards.");
+			}
 			break;
 		case "info":
 		case "accountinfo":
@@ -375,7 +461,7 @@ public class DajiBot {
 						channel.sendMessage(user.getMentionTag() + " Please specify a currency type, one of `diamond coin friendpoint soul`");
 						return;
 					}
-					
+
 					accountDBHandler.addCurrencyToAccount(targetUser, type, amount);
 					channel.sendMessage(user.getMentionTag() + " Currency successfully added.");
 				} catch (InterruptedException e) {
@@ -443,6 +529,7 @@ public class DajiBot {
 
 		sealDBHandler = new DiamondSealDatabaseHandler();
 		accountDBHandler = new AccountDatabaseHandler();
+		rewardsDBHandler = new RewardsDatabaseHandler();
 		diamondSeals = sealDBHandler.getAllDiamondSeals();
 
 		api = new DiscordApiBuilder().setToken(token).login().join();

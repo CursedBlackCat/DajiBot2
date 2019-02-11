@@ -7,11 +7,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 
 import org.javacord.api.entity.user.User;
 
-import me.cursedblackcat.dajibot2.DajiBot;
 import me.cursedblackcat.dajibot2.diamondseal.DiamondSealCard;
 import me.cursedblackcat.dajibot2.rewards.ItemType;
 import me.cursedblackcat.dajibot2.rewards.Reward;
@@ -130,7 +128,7 @@ public class AccountDatabaseHandler {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param user The user whose account the currency should be added to.
@@ -165,7 +163,7 @@ public class AccountDatabaseHandler {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param user The user whose account the currency should be deducted from.
@@ -240,7 +238,10 @@ public class AccountDatabaseHandler {
 				sql = "UPDATE Accounts SET Souls = Souls + " + reward.getAmount() + " WHERE UserID = " + reward.getUser().getIdAsString();
 				break;
 			case CARD:
-				//TODO add card to inventory
+				Account userAccount = getUserAccount(user);
+				ArrayList<Integer> inventory = userAccount.getInventory();
+				inventory.add(reward.getCardID());
+				sql = "UPDATE Accounts SET Inventory = '" + Arrays.toString(inventory.toArray(new Integer[inventory.size()])) + "' WHERE UserID = " + user.getIdAsString();
 				break;
 			}
 			stmt.executeUpdate(sql);

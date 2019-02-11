@@ -10,13 +10,15 @@ public class Reward {
 	private int amount;
 	private Date expiryDate;
 	private int cardID;
+	private String text;
 	
-	public Reward(User u, ItemType t, int a, Date e, int c) {
+	public Reward(User u, ItemType t, int a, Date e, int c, String txt) {
 		user = u;
 		itemType = t;
 		amount = a;
 		expiryDate = e;
 		cardID = c;
+		text = txt;
 	}
 	
 	public User getUser() {
@@ -37,5 +39,9 @@ public class Reward {
 	
 	public int getCardID() {
 		return cardID;
+	}
+	
+	public String getText() {
+		return text;
 	}
 }

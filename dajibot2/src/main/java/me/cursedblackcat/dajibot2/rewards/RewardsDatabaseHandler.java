@@ -37,7 +37,8 @@ public class RewardsDatabaseHandler {
 				" ItemType        TEXT       NOT NULL, " + //What item type the reward is (diamonds, coins, etc)
 				" Amount          INTEGER    NOT NULL, " + //How many of the item to give.
 				" ExpiryDate      INTEGER    NOT NULL, " + //Unix timestamp of the time when this reward expires
-				" CardID          INTEGER    NOT NULL)"; //Card ID, if reward is of type Card, or -1 if reward isn't of type Card
+				" CardID          INTEGER    NOT NULL, " + //Card ID, if reward is of type Card, or -1 if reward is not a card
+				" Text            TEXT       NOT NULL)"; //Reward description text
 		stmt.executeUpdate(sql);
 		stmt.close();
 	}
@@ -48,8 +49,8 @@ public class RewardsDatabaseHandler {
 	 */
 	public boolean addReward(Reward reward) {
 		try {	
-			String sql = "INSERT INTO Rewards (UserID, ItemType, Amount, ExpiryDate, CardID) " +
-					"VALUES (" + reward.getUser().getId() + ", '" + reward.getItemType() + "', '" + reward.getAmount() + "', '" + reward.getExpiryDate().getTime() + "', '" + reward.getCardID() + "');";
+			String sql = "INSERT INTO Rewards (UserID, ItemType, Amount, ExpiryDate, CardID, Text) " +
+					"VALUES (" + reward.getUser().getId() + ", '" + reward.getItemType() + "', '" + reward.getAmount() + "', '" + reward.getExpiryDate().getTime() + ", " + reward.getCardID() + ", ', '" + reward.getText() + "');";
 			stmt.executeUpdate(sql);
 			stmt.close();
 			return true;
@@ -65,7 +66,7 @@ public class RewardsDatabaseHandler {
 	 */
 	public boolean removeReward(Reward reward) {
 		try {
-			String sql = "DELETE FROM Rewards WHERE UserID=" + reward.getUser().getId() + " AND ItemType= '" + reward.getItemType() + "' AND Amount=" + reward.getAmount() + "AND ExpiryDate=" + reward.getExpiryDate().getTime() + "AND CardID=" + reward.getCardID() + ";";
+			String sql = "DELETE FROM Rewards WHERE UserID=" + reward.getUser().getId() + " AND ItemType= '" + reward.getItemType() + "' AND Amount=" + reward.getAmount() + " AND ExpiryDate=" + reward.getExpiryDate().getTime() + " AND CardID=" + reward.getCardID() + ";";
 			stmt.executeUpdate(sql);
 			stmt.close();
 			return true;
@@ -88,7 +89,7 @@ public class RewardsDatabaseHandler {
 			ResultSet rs = stmt.executeQuery("SELECT * FROM Rewards WHERE UserID=" + user.getId() + " AND ExpiryDate>=" + currentTime + ";");
 
 			while (rs.next()) {			
-				Reward reward = new Reward(DajiBot.getUserById(rs.getLong("UserID")), ItemType.valueOf(rs.getString("ItemType")), rs.getInt("Amount"), new Date(rs.getLong("ExpiryDate")), rs.getInt("CardID"));
+				Reward reward = new Reward(DajiBot.getUserById(rs.getLong("UserID")), ItemType.valueOf(rs.getString("ItemType")), rs.getInt("Amount"), new Date(rs.getLong("ExpiryDate")), rs.getInt("CardID"), rs.getString("Text"));
 				rewards.add(reward);
 			}
 
