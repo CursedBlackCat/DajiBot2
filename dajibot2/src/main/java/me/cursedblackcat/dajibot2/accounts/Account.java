@@ -2,7 +2,6 @@ package me.cursedblackcat.dajibot2.accounts;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 
 import org.javacord.api.entity.user.User;

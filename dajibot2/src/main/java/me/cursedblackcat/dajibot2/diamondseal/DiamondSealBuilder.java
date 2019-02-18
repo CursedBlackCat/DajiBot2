@@ -1,7 +1,6 @@
 package me.cursedblackcat.dajibot2.diamondseal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 
 /**

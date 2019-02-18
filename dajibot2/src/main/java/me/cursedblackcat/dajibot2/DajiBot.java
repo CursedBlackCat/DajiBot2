@@ -58,7 +58,7 @@ public class DajiBot {
 			"sealinfo <sealname> - Check available cards/series and their rates in a seal banner.\n\n" +
 			"~~~Account commands~~~\n" + 
 			"register - Register your Discord account with DajiBot.\n\n" +
-			"daily - Collect your daily diamond reward." +
+			"daily - Collect your daily diamond reward.\n\n" +
 			"rewards - List all of your unclaimed rewards.\n\n" +
 			"collect <n> - Collect reward number <n> in your rewards inbox.\n\n" +
 			"accountinfo - View your account info.\n\n" +
