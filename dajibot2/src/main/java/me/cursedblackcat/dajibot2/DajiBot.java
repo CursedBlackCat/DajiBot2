@@ -523,7 +523,7 @@ public class DajiBot {
 		case "resetdaily":
 			if (user.isBotOwner()) {
 				accountDBHandler.resetDailyRewards();
-				channel.sendMessage(user.getMentionTag() + " Please enter a proper amount.");
+				channel.sendMessage(user.getMentionTag() + " Daily rewards reset.");
 			} else {
 				channel.sendMessage(user.getMentionTag() + " You do not have permissions to run this command!");
 			}
