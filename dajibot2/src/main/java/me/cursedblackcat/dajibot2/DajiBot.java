@@ -60,7 +60,7 @@ public class DajiBot {
 			"register - Register your Discord account with DajiBot.\n\n" +
 			"daily - Collect your daily diamond reward." +
 			"rewards - List all of your unclaimed rewards.\n\n" +
-			"collect <n> - Collect reward number <n> in your rewards inbox." +
+			"collect <n> - Collect reward number <n> in your rewards inbox.\n\n" +
 			"accountinfo - View your account info.\n\n" +
 			"inventory <pagenumber> - View your card inventory.\n\n" +
 			"~~~Admin commands~~~\n" + 
@@ -69,7 +69,10 @@ public class DajiBot {
 			"deleteseal - Delete a diamond seal machine. Can only be run by people with admin permissions.\n\n" + 
 			"~~~Bot owner commands~~~\n" + 
 			"addcurrency <@user> <type> <amount> - Add currency to a user. Can only be run by the bot owner.\n\n" + 
+			"resetdaily - Manually resets everyone's daily reward status\n\n" + 
 			"```";
+	
+	
 
 	private	static String prefix = "$";
 
@@ -516,6 +519,9 @@ public class DajiBot {
 			} else {
 				channel.sendMessage(user.getMentionTag() + " You do not have permissions to run this command!");
 			}
+			break;
+		case "resetdaily":
+			accountDBHandler.resetDailyRewards();
 			break;
 		}
 	}
