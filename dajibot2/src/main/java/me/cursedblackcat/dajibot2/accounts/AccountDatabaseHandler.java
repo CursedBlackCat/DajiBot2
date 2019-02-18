@@ -311,4 +311,21 @@ public class AccountDatabaseHandler {
 		}
 		return result;
 	}
+
+	/**
+	 * Returns the user IDs of all registered users.
+	 * @return An ArrayList of user IDs of all registered users.
+	 * @throws SQLException 
+	 */
+	public ArrayList<Long> getAllUsers() throws SQLException {
+		stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("SELECT * FROM RegisteredUsers;");
+		
+		ArrayList<Long> userIDs = new ArrayList<Long>();
+		while (rs.next()) {
+			userIDs.add(rs.getLong("UserID"));
+		}
+		
+		return userIDs;
+	}
 }

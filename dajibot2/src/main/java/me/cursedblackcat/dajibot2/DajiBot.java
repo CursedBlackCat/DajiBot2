@@ -69,10 +69,10 @@ public class DajiBot {
 			"deleteseal - Delete a diamond seal machine. Can only be run by people with admin permissions.\n\n" + 
 			"~~~Bot owner commands~~~\n" + 
 			"addcurrency <@user> <type> <amount> - Add currency to a user. Can only be run by the bot owner.\n\n" + 
-			"resetdaily - Manually resets everyone's daily reward status\n\n" + 
+			"resetdaily - Manually resets everyone's daily reward status. Can only be run by the bot owner.\n\n" + 
+			"rewardall <type> <amount> <rewardtext> - Manually adds a specified reward for all registered users. Can only be run by the bot owner.\n\n" +
+			"cleanrewards - Clears expired rewards from the rewards database. Can only be run by the bot owner.\n\n" +
 			"```";
-
-
 
 	private	static String prefix = "$";
 
@@ -298,11 +298,7 @@ public class DajiBot {
 
 				Reward claimTargetReward = userRewards.get(targetRewardIndex);
 
-				boolean a = rewardsDBHandler.removeReward(claimTargetReward);
-				boolean b = accountDBHandler.claimReward(user, claimTargetReward);
-				if (!(a && b)){
-					channel.sendMessage(user.getMentionTag() + " An error was encountered while claiming your reward (SQLException).");
-				} else {
+				if (accountDBHandler.claimReward(user, claimTargetReward)) {
 					String type = "";
 					switch (claimTargetReward.getItemType()) {
 					case DIAMOND:
@@ -325,6 +321,9 @@ public class DajiBot {
 						break;
 					}
 					channel.sendMessage(user.getMentionTag() + " You have successfully claimed " + type + " x" + claimTargetReward.getAmount() + ".");
+					
+				} else {
+					channel.sendMessage(user.getMentionTag() + " An error occurred (SQLException).");
 				}
 			} catch (NumberFormatException e) {
 				channel.sendMessage(user.getMentionTag() + " Please enter the number of the reward you want to claim. Run the `rewards` command to see all your rewards.");
@@ -477,7 +476,6 @@ public class DajiBot {
 		case "addcurr":
 		case "addcur":
 			if (user.isBotOwner()) {
-				//user type amt
 				try {
 					User targetUser = api.getUserById(c.getArguments()[0].replaceAll("[^0-9]", "")).get();
 					ItemType type;
@@ -513,7 +511,6 @@ public class DajiBot {
 					e.printStackTrace();
 					channel.sendMessage(user.getMentionTag() + " Error occurred: ExecutionException. See stack trace for more info");
 				} catch (NumberFormatException e) {
-					e.printStackTrace();
 					channel.sendMessage(user.getMentionTag() + " Please enter a proper amount.");
 				}
 			} else {
@@ -524,6 +521,77 @@ public class DajiBot {
 			if (user.isBotOwner()) {
 				accountDBHandler.resetDailyRewards();
 				channel.sendMessage(user.getMentionTag() + " Daily rewards reset.");
+			} else {
+				channel.sendMessage(user.getMentionTag() + " You do not have permissions to run this command!");
+			}
+			break;
+		case "rewardall":
+			if (user.isBotOwner()) {
+				try {
+					ItemType type;
+					int amount = Integer.parseInt(c.getArguments()[1]);
+					switch (c.getArguments()[0].toLowerCase()) {
+					case "diamond":
+					case "diamonds":
+						type = ItemType.DIAMOND;
+						break;
+					case "coin":
+					case "coins":
+						type = ItemType.COIN;
+						break;
+					case "friendpoint":
+					case "friendpoints":
+						type = ItemType.FRIEND_POINT;
+						break;
+					case "soul":
+					case "souls":
+						type = ItemType.SOUL;
+						break;
+					default:
+						channel.sendMessage(user.getMentionTag() + " Please specify a reward type, one of `diamond coin friendpoint soul`");
+						return;
+					}
+
+					ArrayList<Long> allUsers = accountDBHandler.getAllUsers();
+
+					String rewardText = "";
+
+					for (int i = 2; i < c.getArguments().length; i++) {
+						rewardText += c.getArguments()[i] + " ";
+					}
+
+					rewardText = rewardText.substring(0, rewardText.length() - 1);
+
+					for (Long id : allUsers) {
+						rewardsDBHandler.addReward(new Reward(api.getUserById(id).get(), type, amount, new Date(221876928000000L), -1, rewardText));
+					}
+
+					channel.sendMessage(user.getMentionTag() + " Rewards successfully added.");
+				} catch (NumberFormatException e) {
+					channel.sendMessage(user.getMentionTag() + " Please enter a proper amount.");
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					channel.sendMessage(user.getMentionTag() + " Error occurred: InterruptedException. See stack trace for more info");
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+					channel.sendMessage(user.getMentionTag() + " Error occurred: ExecutionException. See stack trace for more info");
+				} catch (SQLException e) {
+					e.printStackTrace();
+					channel.sendMessage(user.getMentionTag() + " Error occurred: SQLException. See stack trace for more info");
+				}
+			} else {
+				channel.sendMessage(user.getMentionTag() + " You do not have permissions to run this command!");
+			}
+			break;
+		case "purgeoldrewards":
+		case "purgerewards":
+		case "cleanrewards":
+			if (user.isBotOwner()) {
+				if (rewardsDBHandler.clearExpiredRewards()) {
+					channel.sendMessage(user.getMentionTag() + " Expired rewards cleared from rewards database.");
+				} else {
+					channel.sendMessage(user.getMentionTag() + " Unable to clear expired rewards from rewards database.");
+				}
 			} else {
 				channel.sendMessage(user.getMentionTag() + " You do not have permissions to run this command!");
 			}

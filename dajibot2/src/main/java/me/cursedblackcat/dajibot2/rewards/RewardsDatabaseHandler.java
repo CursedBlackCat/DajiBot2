@@ -51,7 +51,7 @@ public class RewardsDatabaseHandler {
 		try {	
 			String sql = "INSERT INTO Rewards (UserID, ItemType, Amount, ExpiryDate, CardID, Text) " +
 					"VALUES (" + reward.getUser().getId() + ", '" + reward.getItemType() + "', '" + reward.getAmount() + "', '" + reward.getExpiryDate().getTime() + "', " + reward.getCardID() + ", '" + reward.getText() + "');";
-			System.out.println(sql);
+			//System.out.println(sql);
 			stmt.executeUpdate(sql);
 			stmt.close();
 			return true;
@@ -67,7 +67,8 @@ public class RewardsDatabaseHandler {
 	 */
 	public boolean removeReward(Reward reward) {
 		try {
-			String sql = "DELETE FROM Rewards WHERE UserID=" + reward.getUser().getId() + " AND ItemType= '" + reward.getItemType() + "' AND Amount=" + reward.getAmount() + " AND ExpiryDate=" + reward.getExpiryDate().getTime() + " AND CardID=" + reward.getCardID() + ";";
+			String sql = "DELETE FROM Rewards WHERE ID = (SELECT ID from Rewards WHERE UserID=" + reward.getUser().getId() + " AND ItemType= '" + reward.getItemType() + "' AND Amount=" + reward.getAmount() + " AND ExpiryDate=" + reward.getExpiryDate().getTime() + " AND CardID=" + reward.getCardID() + " LIMIT 1);";
+			//System.out.println(sql);
 			stmt.executeUpdate(sql);
 			stmt.close();
 			return true;
