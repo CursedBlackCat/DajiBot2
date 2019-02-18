@@ -71,8 +71,8 @@ public class DajiBot {
 			"addcurrency <@user> <type> <amount> - Add currency to a user. Can only be run by the bot owner.\n\n" + 
 			"resetdaily - Manually resets everyone's daily reward status\n\n" + 
 			"```";
-	
-	
+
+
 
 	private	static String prefix = "$";
 
@@ -189,28 +189,28 @@ public class DajiBot {
 				channel.sendMessage(user.getMentionTag() + " Please register first by running  the `register` command.");
 				return;
 			}
-			
+
 			if (accountDBHandler.dailyRewardAlreadyCollected(user)) {
 				channel.sendMessage(user.getMentionTag() + " You have already collected your daily reward.");
 				return;
 			}
-			
+
 			accountDBHandler.collectDailyReward(user);
 			Date now = new Date();
 			SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d");
-			
+
 			Calendar cal = Calendar.getInstance();
-	        cal.add(Calendar.DAY_OF_MONTH, 1);
-	        cal.set(Calendar.HOUR_OF_DAY, 0);
-	        cal.set(Calendar.MINUTE, 0);
-	        cal.set(Calendar.SECOND, 0);
-	        cal.set(Calendar.MILLISECOND, 0);
-	        long millisecondsUntilMidnight = (cal.getTimeInMillis()-System.currentTimeMillis());
-	        Date tomorrow = new Date(now.getTime() + millisecondsUntilMidnight - 1000);
+			cal.add(Calendar.DAY_OF_MONTH, 1);
+			cal.set(Calendar.HOUR_OF_DAY, 0);
+			cal.set(Calendar.MINUTE, 0);
+			cal.set(Calendar.SECOND, 0);
+			cal.set(Calendar.MILLISECOND, 0);
+			long millisecondsUntilMidnight = (cal.getTimeInMillis()-System.currentTimeMillis());
+			Date tomorrow = new Date(now.getTime() + millisecondsUntilMidnight - 1000);
 
 			Reward dailyReward = new Reward(user, ItemType.DIAMOND, 1, tomorrow, -1, "Daily Login Reward - " + dateFormat.format(now));
 			rewardsDBHandler.addReward(dailyReward);
-			
+
 			channel.sendMessage(user.getMentionTag() + " Your daily reward of Diamond x1 has been sent to your rewards inbox. Run the `rewards` command to see your rewards inbox.");
 			break;
 		case "rewards":
@@ -220,7 +220,7 @@ public class DajiBot {
 			}
 
 			ArrayList<Reward> rewards = accountDBHandler.getUserAccount(user).getRewards();
-			
+
 			if (rewards.size() == 0) {
 				channel.sendMessage(user.getMentionTag() + " You do not currently have any rewards to be collected.");
 				return;
@@ -287,17 +287,17 @@ public class DajiBot {
 			}
 
 			ArrayList<Reward> userRewards = accountDBHandler.getUserAccount(user).getRewards();
-			
+
 			if (userRewards.size() == 0) {
 				channel.sendMessage(user.getMentionTag() + " You do not currently have any rewards to be collected.");
 				return;
 			}
-			
+
 			try {
 				int targetRewardIndex = Integer.parseInt(c.getArguments()[0]) - 1;
-				
+
 				Reward claimTargetReward = userRewards.get(targetRewardIndex);
-				
+
 				boolean a = rewardsDBHandler.removeReward(claimTargetReward);
 				boolean b = accountDBHandler.claimReward(user, claimTargetReward);
 				if (!(a && b)){
@@ -521,7 +521,12 @@ public class DajiBot {
 			}
 			break;
 		case "resetdaily":
-			accountDBHandler.resetDailyRewards();
+			if (user.isBotOwner()) {
+				accountDBHandler.resetDailyRewards();
+				channel.sendMessage(user.getMentionTag() + " Please enter a proper amount.");
+			} else {
+				channel.sendMessage(user.getMentionTag() + " You do not have permissions to run this command!");
+			}
 			break;
 		}
 	}
@@ -570,21 +575,21 @@ public class DajiBot {
 	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
 		ScheduledExecutorService ses = Executors.newScheduledThreadPool(1);
 		DailyRewardsCron task = new DailyRewardsCron("Daily rewards");
-		
+
 		Calendar c = Calendar.getInstance();
-        c.add(Calendar.DAY_OF_MONTH, 1);
-        c.set(Calendar.HOUR_OF_DAY, 0);
-        c.set(Calendar.MINUTE, 0);
-        c.set(Calendar.SECOND, 0);
-        c.set(Calendar.MILLISECOND, 0);
-        long millisecondsUntilMidnight = (c.getTimeInMillis()-System.currentTimeMillis());
-        
-        //Run the task starting at the moment of the upcoming midnight, then subsequently run the task again every midnight afterwards
+		c.add(Calendar.DAY_OF_MONTH, 1);
+		c.set(Calendar.HOUR_OF_DAY, 0);
+		c.set(Calendar.MINUTE, 0);
+		c.set(Calendar.SECOND, 0);
+		c.set(Calendar.MILLISECOND, 0);
+		long millisecondsUntilMidnight = (c.getTimeInMillis()-System.currentTimeMillis());
+
+		//Run the task starting at the moment of the upcoming midnight, then subsequently run the task again every midnight afterwards
 		ScheduledFuture<?> scheduledFuture = ses.scheduleAtFixedRate(task, millisecondsUntilMidnight, 86400000, TimeUnit.MILLISECONDS);
-		
+
 		System.out.println("Daily reward collection flag reset task scheduled! Next execution is " + new Date(new Date().getTime() + scheduledFuture.getDelay(TimeUnit.MILLISECONDS)));
-		
-		
+
+
 		BufferedReader bufferedReader = new BufferedReader(new FileReader("token.txt"));
 		String token = bufferedReader.readLine();
 		bufferedReader.close();
