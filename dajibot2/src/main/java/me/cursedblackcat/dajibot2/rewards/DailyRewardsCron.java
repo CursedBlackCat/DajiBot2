@@ -1,11 +1,10 @@
 package me.cursedblackcat.dajibot2.rewards;
 
-import java.sql.SQLException;
 import java.util.Date;
 
-import me.cursedblackcat.dajibot2.accounts.AccountDatabaseHandler;
+import me.cursedblackcat.dajibot2.DajiBot;
 /**
- * Cron task for one week's worth of reward diamonds.
+ * Cron task for resetting the daily login reward flag.
  * @author Darren Yip
  *
  */
@@ -19,17 +18,9 @@ public class DailyRewardsCron implements Runnable{
 	}
 
 	public void run() {
-		
-		try {
-			new AccountDatabaseHandler().resetDailyRewards();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+
+		DajiBot.accountDBHandler.resetDailyRewards();
+
 		System.out.println("Resetting everyone's daily rewards flag for " + new Date());
 	}
 

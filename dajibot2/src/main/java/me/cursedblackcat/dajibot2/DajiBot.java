@@ -91,9 +91,9 @@ public class DajiBot {
 
 	private static ArrayList<DiamondSeal> diamondSeals = new ArrayList<DiamondSeal>();
 
-	private static DiamondSealDatabaseHandler sealDBHandler;
-	private static AccountDatabaseHandler accountDBHandler;
-	private static RewardsDatabaseHandler rewardsDBHandler;
+	public static DiamondSealDatabaseHandler sealDBHandler;
+	public static AccountDatabaseHandler accountDBHandler;
+	public static RewardsDatabaseHandler rewardsDBHandler;
 
 	public static ExecutedCommand parseCommand(String message) {
 		String[] parts = message.split("\\s+");
