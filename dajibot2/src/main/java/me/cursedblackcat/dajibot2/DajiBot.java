@@ -302,7 +302,6 @@ public class DajiBot {
 				Reward claimTargetReward = null;
 				try {
 					claimTargetReward = userRewards.get(targetRewardIndex);
-					return;
 				} catch (IndexOutOfBoundsException e) {
 					channel.sendMessage(user.getMentionTag() + " Invalid reward number. Run the `rewards` command to see your rewards.");
 				}
