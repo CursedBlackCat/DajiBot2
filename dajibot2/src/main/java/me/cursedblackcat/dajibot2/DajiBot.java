@@ -679,8 +679,7 @@ public class DajiBot {
 		api = new DiscordApiBuilder().setToken(token).login().join();
 		
 		try {
-			////300630118932414464L
-			botChannel = api.getTextChannelById(540306983006240789L).get();
+			botChannel = api.getTextChannelById(300630118932414464L).get();
 			botChannel.sendMessage("DajiBot online! Next daily reset is scheduled for " + new Date(new Date().getTime() + scheduledFuture.getDelay(TimeUnit.MILLISECONDS)) + ".");
 			
 		} catch (NoSuchElementException e) {
