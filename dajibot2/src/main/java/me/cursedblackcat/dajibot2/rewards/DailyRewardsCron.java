@@ -18,10 +18,11 @@ public class DailyRewardsCron implements Runnable{
 	}
 
 	public void run() {
-
 		DajiBot.accountDBHandler.resetDailyRewards();
 
 		System.out.println("Resetting everyone's daily rewards flag for " + new Date());
+		
+		DajiBot.botChannel.sendMessage("**A new day has dawned for DajiBot!** You can now collect another daily reward by running the `daily` command.");
 	}
 
 	@Override
