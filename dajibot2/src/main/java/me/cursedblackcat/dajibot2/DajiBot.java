@@ -206,7 +206,7 @@ public class DajiBot {
 			cal.set(Calendar.SECOND, 0);
 			cal.set(Calendar.MILLISECOND, 0);
 			long millisecondsUntilMidnight = (cal.getTimeInMillis()-System.currentTimeMillis());
-			Date tomorrow = new Date(now.getTime() + millisecondsUntilMidnight - 1000);
+			Date tomorrow = new Date(now.getTime() + millisecondsUntilMidnight - 1000 + 7776000000L);
 
 			Reward dailyReward = new Reward(user, ItemType.DIAMOND, 1, tomorrow, -1, "Daily Login Reward - " + dateFormat.format(now));
 			rewardsDBHandler.addReward(dailyReward);
@@ -296,8 +296,14 @@ public class DajiBot {
 			try {
 				int targetRewardIndex = Integer.parseInt(c.getArguments()[0]) - 1;
 
-				Reward claimTargetReward = userRewards.get(targetRewardIndex);
-
+				Reward claimTargetReward = null;
+				try {
+					claimTargetReward = userRewards.get(targetRewardIndex);
+					return;
+				} catch (IndexOutOfBoundsException e) {
+					channel.sendMessage(user.getMentionTag() + " Invalid reward number. Run the `rewards` command to see your rewards.");
+				}
+				
 				if (accountDBHandler.claimReward(user, claimTargetReward)) {
 					String type = "";
 					switch (claimTargetReward.getItemType()) {
