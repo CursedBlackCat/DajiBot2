@@ -38,6 +38,7 @@ import me.cursedblackcat.dajibot2.diamondseal.DiamondSealDatabaseHandler;
 import me.cursedblackcat.dajibot2.rewards.ItemType;
 import me.cursedblackcat.dajibot2.rewards.Reward;
 import me.cursedblackcat.dajibot2.rewards.RewardsDatabaseHandler;
+import me.cursedblackcat.dajibot2.shop.ShopDatabaseHandler;
 import me.cursedblackcat.dajibot2.rewards.DailyRewardsCron;
 
 /**
@@ -97,6 +98,7 @@ public class DajiBot {
 	public static DiamondSealDatabaseHandler sealDBHandler;
 	public static AccountDatabaseHandler accountDBHandler;
 	public static RewardsDatabaseHandler rewardsDBHandler;
+	public static ShopDatabaseHandler shopDBHandler;
 
 	public static ExecutedCommand parseCommand(String message) {
 		String[] parts = message.split("\\s+");
@@ -405,6 +407,19 @@ public class DajiBot {
 				channel.sendMessage(inventoryEmbed);
 			}
 			break;
+		case "listshops":
+			//TODO list shops
+			break;
+		case "listitems":
+			String shopName = "";
+			for (String s : c.getArguments()) {
+				shopName += s;
+			}
+			//TODO list all items in shop;
+			break;
+		case "buy":
+			//TODO buy item from shop
+			break;
 		case "changeprefix":
 			if (privileged) {
 				prefix = c.getArguments()[0];
@@ -676,6 +691,7 @@ public class DajiBot {
 		sealDBHandler = new DiamondSealDatabaseHandler();
 		accountDBHandler = new AccountDatabaseHandler();
 		rewardsDBHandler = new RewardsDatabaseHandler();
+		shopDBHandler = new ShopDatabaseHandler();
 		diamondSeals = sealDBHandler.getAllDiamondSeals();
 
 		api = new DiscordApiBuilder().setToken(token).login().join();
