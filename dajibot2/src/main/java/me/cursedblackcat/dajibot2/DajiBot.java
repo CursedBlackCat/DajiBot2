@@ -209,12 +209,15 @@ public class DajiBot {
 			cal.set(Calendar.SECOND, 0);
 			cal.set(Calendar.MILLISECOND, 0);
 			long millisecondsUntilMidnight = (cal.getTimeInMillis()-System.currentTimeMillis());
-			Date tomorrow = new Date(now.getTime() + millisecondsUntilMidnight + 7776000000L);
+			Date ninetyDays = new Date(now.getTime() + millisecondsUntilMidnight + 7776000000L);
 
-			Reward dailyReward = new Reward(user, ItemType.DIAMOND, 1, tomorrow, -1, "Daily Login Reward - " + dateFormat.format(now));
-			rewardsDBHandler.addReward(dailyReward);
+			Reward dailyDiamondReward = new Reward(user, ItemType.DIAMOND, 1, ninetyDays, -1, "Daily Login Reward - " + dateFormat.format(now));
+			rewardsDBHandler.addReward(dailyDiamondReward);
+			
+			Reward dailyFPReward = new Reward(user, ItemType.FRIEND_POINT, 200, ninetyDays, -1, "Daily Login Reward - " + dateFormat.format(now));
+			rewardsDBHandler.addReward(dailyFPReward);
 
-			channel.sendMessage(user.getMentionTag() + " Your daily reward of Diamond x1 has been sent to your rewards inbox. Run the `rewards` command to see your rewards inbox.");
+			channel.sendMessage(user.getMentionTag() + " Your daily rewards of Diamond x1 and Friend Point x200 has been sent to your rewards inbox. Run the `rewards` command to see your rewards inbox.");
 			break;
 		case "rewards":
 			if (!accountDBHandler.userAlreadyExists(user)) {
