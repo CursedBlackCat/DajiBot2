@@ -26,7 +26,7 @@ public class ShopDatabaseHandler {
 		Class.forName("org.sqlite.JDBC");
 		conn = DriverManager.getConnection("jdbc:sqlite:shop.db");
 		stmt = conn.createStatement();
-		String sql = "CREATE TABLE ShopItems" +
+		String sql = "CREATE TABLE IF NOT EXISTS ShopItems" +
 				" (ID INTEGER PRIMARY KEY AUTOINCREMENT     NOT NULL," +
 				" ItemType        STRING     NOT NULL, " + 
 				" CardID          INTEGER    NOT NULL, " + 
@@ -41,18 +41,36 @@ public class ShopDatabaseHandler {
 	/**
 	 * Adds a new item for sale to the shop.
 	 * @param item The ShopItem to add to the shop.
-	 * @return True if the operation completed successfully, or false otehrwise.
-	 * @throws NoSuchShopException
+	 * @return True if the operation completed successfully, or false otherwise.
 	 */
 	public boolean addItemToShop(ShopItem item) {
 		try {
 			stmt = conn.createStatement();
 			String sql = "INSERT INTO ShopItems (ItemType, CardID, ItemAmount, Cost, CostType) " +
-					"VALUES ('"+ item.getItemType().toString() +"'," + item.getCardID() + ", " + item.getItemAmount() + ", " + item.getCostAmount() + ", '"+ item.getCostType().toString() + ");";
+					"VALUES ('"+ item.getItemType().toString() +"'," + item.getCardID() + ", " + item.getItemAmount() + ", " + item.getCostAmount() + ", '"+ item.getCostType().toString() + "');";
 			stmt.executeUpdate(sql);
 			stmt.close();
 			return true;
 		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	/**
+	 * Remove an item from the shop.
+	 * @param item The ShopItem to be removed.
+	 * @return True if the operation completed successfully, or false otherwise.
+	 */
+	public boolean removeItemFromShop(ShopItem item) {
+		try {
+			stmt = conn.createStatement();
+			String sql = "DELETE FROM ShopItems WHERE ItemType='"+ item.getItemType().toString() +"' AND CardID=" + item.getCardID() + " AND ItemAmount=" + item.getItemAmount() + " AND Cost=" + item.getCostAmount() + " AND CostType='"+ item.getCostType().toString() + "';";
+			stmt.executeUpdate(sql);
+			stmt.close();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
 			return false;
 		}
 	}
@@ -70,7 +88,7 @@ public class ShopDatabaseHandler {
 		ResultSet rs = stmt.executeQuery("SELECT * FROM ShopItems;");
 		
 		while (rs.next()) {
-			items.add(new ShopItem(Enum.valueOf(ItemType.class, rs.getString("ItemType")),rs.getInt("CardID"),rs.getInt("ItemAmount"), ItemType.valueOf(ItemType.class, rs.getString("CostType")), rs.getInt("ItemCost")));
+			items.add(new ShopItem(Enum.valueOf(ItemType.class, rs.getString("ItemType")),rs.getInt("CardID"),rs.getInt("ItemAmount"), ItemType.valueOf(ItemType.class, rs.getString("CostType")), rs.getInt("Cost")));
 		}
 		
 		return items;
