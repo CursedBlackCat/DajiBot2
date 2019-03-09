@@ -195,7 +195,93 @@ public class DajiBot {
 		case "listitems":
 		case "shop":
 		case "listshop":
-			
+			try {
+				if (!accountDBHandler.userAlreadyExists(user)) {
+					channel.sendMessage(user.getMentionTag() + " Please register first by running  the `register` command.");
+					return;
+				}
+
+				ArrayList<ShopItem> allItems = shopDBHandler.getAllItemsInShop();
+
+				int shopPage = -1;
+
+				try {
+					shopPage = Integer.parseInt(c.getArguments()[0]);
+				} catch (Exception e) {
+					shopPage = 1;
+				}
+
+				int maxShopPage = (int) Math.round(Math.ceil(allItems.size() / 5.0));
+
+				EmbedBuilder shopEmbed = new EmbedBuilder();
+				shopEmbed.setAuthor(user)
+				.setTitle("Shop - " + allItems.size() + " items total")
+				.setColor(Color.MAGENTA)
+				.setFooter("Page " + shopPage + " of " + maxShopPage +" | DajiBot v2", "https://cdn.discordapp.com/app-icons/293148175013773312/9ec4cdaabd88f0902a7ea2eddab5a827.png");
+				int shopStartBound = 5 * (shopPage - 1);
+				int shopEndBound = shopStartBound + 5;
+
+				for (int i = shopStartBound; i < shopEndBound; i++) {
+					try{
+						String costTypeString = "";
+						ShopItem shopItem = allItems.get(i);
+
+						switch (shopItem.getCostType()) {
+						case DIAMOND:
+							costTypeString = "Diamond";
+							break;
+						case COIN:
+							costTypeString = "Coin";
+							break;
+						case FRIEND_POINT:
+							costTypeString = "Friend Point";
+							break;
+						case SOUL:
+							costTypeString = "Soul";
+							break;
+						default:
+							costTypeString = "An error occurred";
+							break;
+						}
+
+
+						if (shopItem.getItemType().equals(ItemType.CARD)) {
+							shopEmbed.addField((i + 1) + ". " + DiamondSealCard.getCardNameFromID(shopItem.getCardID()) + " x" + shopItem.getItemAmount(), costTypeString + " x" + shopItem.getCostAmount());
+						} else {
+							String shopItemTypeString = "";
+
+							switch (shopItem.getItemType()) {
+							case DIAMOND:
+								shopItemTypeString = "Diamond";
+								break;
+							case COIN:
+								shopItemTypeString = "Coin";
+								break;
+							case FRIEND_POINT:
+								shopItemTypeString = "Friend Point";
+								break;
+							case SOUL:
+								shopItemTypeString = "Soul";
+								break;
+							default:
+								shopItemTypeString = "An error occurred";
+								break;
+							}
+
+							shopEmbed.addField((i + 1) + ". " + shopItemTypeString + " x" + shopItem.getItemAmount(), costTypeString + " x" + shopItem.getCostAmount());
+						}						
+					} catch (IndexOutOfBoundsException e) {
+						//end of list was reached, pass
+					}
+				}
+
+				if (!(shopPage > maxShopPage)){
+					channel.sendMessage(shopEmbed);
+				}
+			} catch (SQLException e) {
+				channel.sendMessage("An exception occurred while listing shop items: SQLException. See stack trace for more info.");
+				e.printStackTrace();
+			}
 			break;
 		case "buy":
 			try {
