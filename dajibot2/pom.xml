@@ -14,6 +14,12 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+	<repositories>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
@@ -21,6 +27,18 @@
 			<artifactId>junit</artifactId>
 			<version>3.8.1</version>
 			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>de.btobastian.sdcf4j</groupId>
+			<artifactId>sdcf4j-core</artifactId>
+			<version>1.0.10</version>
+		</dependency>
+
+		<dependency>
+			<groupId>de.btobastian.sdcf4j</groupId>
+			<artifactId>sdcf4j-javacord</artifactId>
+			<version>1.0.10</version>
 		</dependency>
 
 		<dependency>
