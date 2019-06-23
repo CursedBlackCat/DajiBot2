@@ -6,17 +6,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.TextChannel;
@@ -113,7 +109,7 @@ public class DajiBot {
 	public static ExecutedCommand parseCommand(String message) {
 		String[] parts = message.split("\\s+");
 		String command = parts[0].substring(1);
-		String[] arguments = ArrayUtils.remove(parts, 0);
+		String[] arguments = Arrays.copyOfRange(parts, 1, parts.length);
 
 		return new ExecutedCommand(command, arguments);
 	}
