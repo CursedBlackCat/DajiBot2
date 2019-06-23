@@ -14,13 +14,13 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.javacord:javacord:3.0.3'
+    implementation 'org.javacord:javacord:3.0.4'
 
-    implementation 'org.json:json:20180130'
+    implementation 'org.json:json:20180813'
 
-    implementation 'org.xerial:sqlite-jdbc:3.25.2'
+    implementation 'org.xerial:sqlite-jdbc:3.27.2.1'
 
-    testImplementation 'junit:junit:3.8.1'
+    testImplementation 'junit:junit:4.12'
 }
 
 publishing {
