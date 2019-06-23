@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+group 'me.cursedblackcat'
+version '2.0.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.javacord:javacord:3.0.3'
+
+    implementation 'org.json:json:20180130'
+
+    implementation 'org.xerial:sqlite-jdbc:3.25.2'
+
+    testImplementation 'junit:junit:3.8.1'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId    = 'me.cursedblackcat'
+            artifactId = 'dajibot'
+            version    = '2.0.0-SNAPSHOT'
+
+            from components.java
+        }
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
