@@ -1,1 +1,54 @@
-/bin/
+token.txt
+
+# Java
+*.class
+*.log
+
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Eclipse
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+
+.classpath
+.project
+
+.externalToolBuilders/
+*.launch
+.autotools
+.factorypath
+.target
+.tern-project
+.texlipse
+.springBeans
+.recommenders/
+.apt_generated/
+
+# JetBrains
+.idea/
+
+*.iml
+*.ipr
+
+out/
+
+# Gradle
+.gradle
+/build/
+
+!gradle-wrapper.jar
