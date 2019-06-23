@@ -1,6 +1,6 @@
-package me.cursedblackcat.dajibot2.shop;
+package me.cursedblackcat.dajibot.shop;
 
-import me.cursedblackcat.dajibot2.rewards.ItemType;
+import me.cursedblackcat.dajibot.rewards.ItemType;
 
 /**
  * Represents one item for sale in an item shop.

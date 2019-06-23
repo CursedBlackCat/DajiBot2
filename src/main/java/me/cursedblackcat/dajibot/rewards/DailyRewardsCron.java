@@ -1,8 +1,8 @@
-package me.cursedblackcat.dajibot2.rewards;
+package me.cursedblackcat.dajibot.rewards;
 
 import java.util.Date;
 
-import me.cursedblackcat.dajibot2.DajiBot;
+import me.cursedblackcat.dajibot.DajiBot;
 /**
  * Cron task for resetting the daily login reward flag.
  * @author Darren Yip

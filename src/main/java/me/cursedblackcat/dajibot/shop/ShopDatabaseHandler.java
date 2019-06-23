@@ -1,4 +1,4 @@
-package me.cursedblackcat.dajibot2.shop;
+package me.cursedblackcat.dajibot.shop;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
-import me.cursedblackcat.dajibot2.rewards.ItemType;
+import me.cursedblackcat.dajibot.rewards.ItemType;
 
 /**
  * Class for handling database operations in the Shop database.

@@ -1,4 +1,4 @@
-package me.cursedblackcat.dajibot2;
+package me.cursedblackcat.dajibot;
 
 /**
  * Represents a bot command that was received in chat, with a command name and potential arguments.

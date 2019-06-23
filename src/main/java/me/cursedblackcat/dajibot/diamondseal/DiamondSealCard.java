@@ -1,9 +1,9 @@
-package me.cursedblackcat.dajibot2.diamondseal;
+package me.cursedblackcat.dajibot.diamondseal;
 
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import me.cursedblackcat.dajibot2.DajiBot;
+import me.cursedblackcat.dajibot.DajiBot;
 
 public class DiamondSealCard extends DiamondSealEntity{
 	public static String getCardNameFromID(int id) {

@@ -1,4 +1,4 @@
-package me.cursedblackcat.dajibot2.diamondseal;
+package me.cursedblackcat.dajibot.diamondseal;
 
 /**
  * Represents a result of a diamond seal pull. Can be either a card (for collab seals) or a series (for engraver and carver seals)

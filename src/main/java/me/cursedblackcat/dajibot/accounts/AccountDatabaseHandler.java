@@ -1,4 +1,4 @@
-package me.cursedblackcat.dajibot2.accounts;
+package me.cursedblackcat.dajibot.accounts;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,10 +10,10 @@ import java.util.Arrays;
 
 import org.javacord.api.entity.user.User;
 
-import me.cursedblackcat.dajibot2.diamondseal.DiamondSealCard;
-import me.cursedblackcat.dajibot2.rewards.ItemType;
-import me.cursedblackcat.dajibot2.rewards.Reward;
-import me.cursedblackcat.dajibot2.rewards.RewardsDatabaseHandler;
+import me.cursedblackcat.dajibot.diamondseal.DiamondSealCard;
+import me.cursedblackcat.dajibot.rewards.ItemType;
+import me.cursedblackcat.dajibot.rewards.Reward;
+import me.cursedblackcat.dajibot.rewards.RewardsDatabaseHandler;
 
 /**
  * Class for handling database operations in the Diamond Seal table.

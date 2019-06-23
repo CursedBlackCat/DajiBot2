@@ -1,4 +1,4 @@
-package me.cursedblackcat.dajibot2;
+package me.cursedblackcat.dajibot;
 
 import java.awt.Color;
 import java.io.BufferedReader;
@@ -28,19 +28,19 @@ import org.javacord.api.entity.user.User;
 import org.javacord.api.listener.message.MessageCreateListener;
 import org.javacord.api.util.event.ListenerManager;
 
-import me.cursedblackcat.dajibot2.diamondseal.DiamondSealCard;
-import me.cursedblackcat.dajibot2.accounts.Account;
-import me.cursedblackcat.dajibot2.accounts.AccountDatabaseHandler;
-import me.cursedblackcat.dajibot2.accounts.InsufficientCurrencyException;
-import me.cursedblackcat.dajibot2.diamondseal.DiamondSeal;
-import me.cursedblackcat.dajibot2.diamondseal.DiamondSealBuilder;
-import me.cursedblackcat.dajibot2.diamondseal.DiamondSealDatabaseHandler;
-import me.cursedblackcat.dajibot2.rewards.ItemType;
-import me.cursedblackcat.dajibot2.rewards.Reward;
-import me.cursedblackcat.dajibot2.rewards.RewardsDatabaseHandler;
-import me.cursedblackcat.dajibot2.shop.ShopDatabaseHandler;
-import me.cursedblackcat.dajibot2.shop.ShopItem;
-import me.cursedblackcat.dajibot2.rewards.DailyRewardsCron;
+import me.cursedblackcat.dajibot.diamondseal.DiamondSealCard;
+import me.cursedblackcat.dajibot.accounts.Account;
+import me.cursedblackcat.dajibot.accounts.AccountDatabaseHandler;
+import me.cursedblackcat.dajibot.accounts.InsufficientCurrencyException;
+import me.cursedblackcat.dajibot.diamondseal.DiamondSeal;
+import me.cursedblackcat.dajibot.diamondseal.DiamondSealBuilder;
+import me.cursedblackcat.dajibot.diamondseal.DiamondSealDatabaseHandler;
+import me.cursedblackcat.dajibot.rewards.ItemType;
+import me.cursedblackcat.dajibot.rewards.Reward;
+import me.cursedblackcat.dajibot.rewards.RewardsDatabaseHandler;
+import me.cursedblackcat.dajibot.shop.ShopDatabaseHandler;
+import me.cursedblackcat.dajibot.shop.ShopItem;
+import me.cursedblackcat.dajibot.rewards.DailyRewardsCron;
 
 /**
  * The main class of the program.

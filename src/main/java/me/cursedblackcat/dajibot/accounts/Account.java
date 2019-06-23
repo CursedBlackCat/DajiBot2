@@ -1,4 +1,4 @@
-package me.cursedblackcat.dajibot2.accounts;
+package me.cursedblackcat.dajibot.accounts;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -6,8 +6,8 @@ import java.util.Collections;
 
 import org.javacord.api.entity.user.User;
 
-import me.cursedblackcat.dajibot2.rewards.Reward;
-import me.cursedblackcat.dajibot2.rewards.RewardsDatabaseHandler;
+import me.cursedblackcat.dajibot.rewards.Reward;
+import me.cursedblackcat.dajibot.rewards.RewardsDatabaseHandler;
 
 public class Account {
 	private User user;

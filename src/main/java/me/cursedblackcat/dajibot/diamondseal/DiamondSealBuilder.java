@@ -1,4 +1,4 @@
-package me.cursedblackcat.dajibot2.diamondseal;
+package me.cursedblackcat.dajibot.diamondseal;
 
 import java.util.ArrayList;
 import java.util.Iterator;

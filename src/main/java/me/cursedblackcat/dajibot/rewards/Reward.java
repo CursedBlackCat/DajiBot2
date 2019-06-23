@@ -1,4 +1,4 @@
-package me.cursedblackcat.dajibot2.rewards;
+package me.cursedblackcat.dajibot.rewards;
 
 import java.util.Date;
 

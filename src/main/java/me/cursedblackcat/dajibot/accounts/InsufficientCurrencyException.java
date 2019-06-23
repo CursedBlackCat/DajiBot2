@@ -1,4 +1,4 @@
-package me.cursedblackcat.dajibot2.accounts;
+package me.cursedblackcat.dajibot.accounts;
 
 public class InsufficientCurrencyException extends Exception {
 
